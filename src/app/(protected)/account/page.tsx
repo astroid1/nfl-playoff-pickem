@@ -6,7 +6,6 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 
@@ -16,8 +15,6 @@ export default function AccountPage() {
 
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
-  const [gameReminders, setGameReminders] = useState(true)
-  const [weeklyRecap, setWeeklyRecap] = useState(true)
   const [loading, setLoading] = useState(false)
   const [profileLoading, setProfileLoading] = useState(true)
 
@@ -41,8 +38,6 @@ export default function AccountPage() {
         const profile = data as any
         setUsername(profile.username)
         setEmail(profile.email)
-        setGameReminders(profile.notification_preferences?.game_reminders ?? true)
-        setWeeklyRecap(profile.notification_preferences?.weekly_recap ?? true)
       }
     } catch (error) {
       console.error('Error loading profile:', error)
@@ -70,31 +65,6 @@ export default function AccountPage() {
       toast.success('Profile updated successfully!')
     } catch (error: any) {
       toast.error(error.message || 'Error updating profile')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleUpdateNotifications = async () => {
-    setLoading(true)
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        // @ts-ignore
-        .update({
-          notification_preferences: {
-            game_reminders: gameReminders,
-            weekly_recap: weeklyRecap,
-          },
-        } as any)
-        .eq('id', user!.id)
-
-      if (error) throw error
-
-      toast.success('Notification preferences updated!')
-    } catch (error: any) {
-      toast.error(error.message || 'Error updating preferences')
     } finally {
       setLoading(false)
     }
@@ -161,39 +131,6 @@ export default function AccountPage() {
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="game-reminders">Game Reminder Emails</Label>
-            </div>
-            <Switch
-              id="game-reminders"
-              checked={gameReminders}
-              onCheckedChange={setGameReminders}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="weekly-recap">Weekly Recap Emails</Label>
-            </div>
-            <Switch
-              id="weekly-recap"
-              checked={weeklyRecap}
-              onCheckedChange={setWeeklyRecap}
-            />
-          </div>
-
-          <Button onClick={handleUpdateNotifications} disabled={loading}>
-            {loading ? 'Saving...' : 'Save Preferences'}
-          </Button>
         </CardContent>
       </Card>
 
