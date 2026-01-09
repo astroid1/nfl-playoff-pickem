@@ -59,7 +59,7 @@ export function WeeklyLeaderboardTable({ season, weekNumber }: WeeklyLeaderboard
           </TableRow>
         </TableHeader>
         <TableBody>
-          {standings.map((stat: any, index) => {
+          {(standings as any[]).map((stat: any, index) => {
             const rank = index + 1
             const totalCompleted = stat.total_correct + stat.total_incorrect
             const winRate = totalCompleted > 0

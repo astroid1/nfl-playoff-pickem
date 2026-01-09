@@ -88,7 +88,7 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {standings.map((stat, index) => {
+            {(standings as any[]).map((stat: any, index) => {
               const rank = index + 1
               const totalGames = stat.total_correct_picks + stat.total_incorrect_picks
               const winRate = totalGames > 0

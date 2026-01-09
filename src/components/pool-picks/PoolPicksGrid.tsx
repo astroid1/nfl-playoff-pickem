@@ -54,23 +54,23 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
 
   // Get unique users who made picks
   const userMap = new Map()
-  poolPicks?.forEach(pick => {
-    if (pick.profile && !userMap.has(pick.profile.id)) {
-      userMap.set(pick.profile.id, pick.profile)
-    }
-  })
-  const users = Array.from(userMap.values())
+    ; (poolPicks as any[])?.forEach(pick => {
+      if (pick.profile && !userMap.has(pick.profile.id)) {
+        userMap.set(pick.profile.id, pick.profile)
+      }
+    })
+  const users = Array.from(userMap.values()) as any[]
 
   // Group picks by user and game
   const picksByUserAndGame = new Map<string, Map<number, any>>()
-  poolPicks?.forEach(pick => {
-    if (!pick.profile) return
+    ; (poolPicks as any[])?.forEach(pick => {
+      if (!pick.profile) return
 
-    if (!picksByUserAndGame.has(pick.profile.id)) {
-      picksByUserAndGame.set(pick.profile.id, new Map())
-    }
-    picksByUserAndGame.get(pick.profile.id)!.set(pick.game_id, pick)
-  })
+      if (!picksByUserAndGame.has(pick.profile.id)) {
+        picksByUserAndGame.set(pick.profile.id, new Map())
+      }
+      picksByUserAndGame.get(pick.profile.id)!.set(pick.game_id, pick)
+    })
 
   const getPickBadge = (pick: any, game: any) => {
     if (!pick) {
@@ -146,7 +146,7 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
           <CardContent>
             {/* User picks for this game */}
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {users.map(user => {
+              {(users as any[]).map(user => {
                 const userPicks = picksByUserAndGame.get(user.id)
                 const pick = userPicks?.get(game.id)
 

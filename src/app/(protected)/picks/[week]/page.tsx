@@ -124,7 +124,7 @@ export default function WeeklyPicksPage({ params }: PageProps) {
 
             <div className="grid gap-6 md:grid-cols-2">
               {roundGames.map((game: any) => {
-                const currentPick = picks?.find(p => p.game_id === game.id)
+                const currentPick = (picks as any)?.find((p: any) => p.game_id === game.id)
                 return (
                   <GameCard
                     key={game.id}
