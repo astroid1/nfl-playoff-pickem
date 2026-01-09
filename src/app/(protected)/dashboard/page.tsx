@@ -34,7 +34,7 @@ export default async function DashboardPage() {
     .select('*')
     .eq('user_id', user.id)
     .eq('season', currentSeason)
-    .single()
+    .single() as any
 
   return (
     <div className="space-y-8">
