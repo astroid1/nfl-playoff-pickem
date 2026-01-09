@@ -96,7 +96,6 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
                 : 0
               const isCurrentUser = user?.id === stat.user_id
               const medal = getMedalEmoji(rank)
-              const hasNoGames = totalGames === 0 && stat.total_pending_picks === 0
 
               return (
                 <TableRow
@@ -112,18 +111,11 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
                   <TableCell className="py-2 md:py-4">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                       <span className="truncate max-w-[120px] sm:max-w-none">{stat.profile?.username || 'Unknown'}</span>
-                      <div className="flex gap-1">
-                        {isCurrentUser && (
-                          <Badge variant="secondary" className="text-xs">
-                            You
-                          </Badge>
-                        )}
-                        {hasNoGames && (
-                          <Badge variant="outline" className="text-xs text-muted-foreground hidden sm:inline-flex">
-                            No picks yet
-                          </Badge>
-                        )}
-                      </div>
+                      {isCurrentUser && (
+                        <Badge variant="secondary" className="text-xs">
+                          You
+                        </Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="text-right py-2 md:py-4">
