@@ -23,7 +23,8 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nFix Supabase type compatibility for Vercel deployment\n\n- Update database.types.ts with Relationships arrays required by Supabase client v2.90\n- Add missing api_sync_log table type definition\n- Add CompositeTypes section and helper type exports \\(Tables, TablesInsert, etc.\\)\n- Fix NFLApiClient supabase property type to use Awaited<ReturnType<>>\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd pool rules and remove 3rd place medal\n\n- Add Pool Rules section to leaderboard page with entry fee \\($10\\), prize split \\(70%/30%\\), and payment options \\(PayPal/Venmo\\)\n- Remove 3rd place medal from all leaderboard tables \\(only 1st and 2nd place prizes\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd pool rules and remove 3rd place medal\n\n- Add Pool Rules section to leaderboard page with entry fee \\($10\\), prize split \\(70%/30%\\), and payment options \\(PayPal/Venmo\\)\n- Remove 3rd place medal from all leaderboard tables \\(only 1st and 2nd place prizes\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd pool rules to dashboard How to Play section\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

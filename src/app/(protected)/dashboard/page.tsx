@@ -152,6 +152,16 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
+            <h3 className="font-semibold mb-2">Pool Rules</h3>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+              <li><strong>Entry Fee:</strong> $10 to play. NO SPREADS.</li>
+              <li><strong>Prizes:</strong> 70% first place, 30% second place</li>
+              <li><strong>PayPal:</strong> thirt49@gmail.com (Please include your Pool username in the subject)</li>
+              <li><strong>Venmo:</strong> @Grant-Hirt</li>
+            </ul>
+          </div>
+
+          <div>
             <h3 className="font-semibold mb-2">Making Your Picks</h3>
             <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
               <li>Pick the winner for each playoff game before it starts</li>
