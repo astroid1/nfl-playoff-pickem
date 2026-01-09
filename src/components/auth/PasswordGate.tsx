@@ -106,7 +106,7 @@ export function PasswordGate() {
                     />
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="pt-2">
                   <Button type="submit" className="w-full" disabled={isVerifying}>
                     {isVerifying ? 'Verifying...' : 'Continue to Sign Up'}
                   </Button>
@@ -149,7 +149,7 @@ export function PasswordGate() {
                     />
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="pt-2">
                   <Button type="submit" className="w-full" disabled={isLoggingIn}>
                     {isLoggingIn ? 'Signing in...' : 'Sign In'}
                   </Button>
