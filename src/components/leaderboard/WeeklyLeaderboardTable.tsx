@@ -40,7 +40,6 @@ export function WeeklyLeaderboardTable({ season, weekNumber }: WeeklyLeaderboard
   const getMedalEmoji = (rank: number) => {
     if (rank === 1) return '🥇'
     if (rank === 2) return '🥈'
-    if (rank === 3) return '🥉'
     return null
   }
 

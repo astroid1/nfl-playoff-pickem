@@ -69,6 +69,19 @@ export default function LeaderboardPage() {
               </div>
 
               <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Pool Rules</h3>
+                <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                  <p><strong>Entry Fee:</strong> $10 to play. NO SPREADS.</p>
+                  <p><strong>Prizes:</strong> 70% first place, 30% second place</p>
+                  <p className="pt-2"><strong>Payment Options:</strong></p>
+                  <ul className="list-disc list-inside ml-2 space-y-1">
+                    <li>PayPal to <span className="font-medium text-foreground">thirt49@gmail.com</span> (Please include your Pool username in the subject)</li>
+                    <li>Venmo to <span className="font-medium text-foreground">@Grant-Hirt</span></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
                 <h3 className="font-semibold mb-2">Tiebreaker Rules</h3>
                 <p className="text-sm text-muted-foreground mb-3">
                   If two or more players have the same total points and correct picks, the tiebreaker

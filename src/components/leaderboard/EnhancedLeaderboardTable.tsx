@@ -42,7 +42,6 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
   const getMedalEmoji = (rank: number) => {
     if (rank === 1) return '🥇'
     if (rank === 2) return '🥈'
-    if (rank === 3) return '🥉'
     return null
   }
 
