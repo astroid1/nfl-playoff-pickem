@@ -81,12 +81,13 @@ export default function AccountPage() {
     try {
       const { error } = await supabase
         .from('profiles')
+        // @ts-ignore
         .update({
           notification_preferences: {
             game_reminders: gameReminders,
             weekly_recap: weeklyRecap,
           },
-        })
+        } as any)
         .eq('id', user!.id)
 
       if (error) throw error
