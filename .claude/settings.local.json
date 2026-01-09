@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsx:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(curl:*)",
+      "Bash(powershell \"Get-Process node | Stop-Process -Force\")",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(timeout 5 tail:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(npm run seed-games:*)",
+      "Bash(npm run simulate-all:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npm run lint)"
+    ]
+  }
+}

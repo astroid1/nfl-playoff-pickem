@@ -1,0 +1,29 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/cron/lock-games",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/sync-scores",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/calculate-stats",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/send-weekly-recap",
+      "schedule": "0 14 * * 1"
+    }
+  ]
+}
