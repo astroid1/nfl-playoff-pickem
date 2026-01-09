@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .single() as any
 
   // Get current season
   const currentSeason = parseInt(process.env.CURRENT_NFL_SEASON || '2025')
