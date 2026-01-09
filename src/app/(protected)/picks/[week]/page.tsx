@@ -24,7 +24,7 @@ export default function WeeklyPicksPage({ params }: PageProps) {
   const submitPick = useSubmitPick()
 
   const handlePickChange = async (gameId: number, teamId: number, superbowlTotalPointsGuess?: number | null) => {
-    const game = games?.find(g => g.id === gameId)
+    const game = (games as any)?.find((g: any) => g.id === gameId)
     if (!game) throw new Error('Game not found')
 
     await submitPick.mutateAsync({
