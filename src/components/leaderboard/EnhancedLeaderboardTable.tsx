@@ -47,14 +47,14 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
 
   return (
     <TooltipProvider>
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-16">Rank</TableHead>
+              <TableHead className="w-12 md:w-16">Rank</TableHead>
               <TableHead>Player</TableHead>
-              <TableHead className="text-right">Points</TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-right">Pts</TableHead>
+              <TableHead className="text-right hidden sm:table-cell">
                 <Tooltip>
                   <TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-4">
                     Correct
@@ -64,11 +64,12 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
-              <TableHead className="text-right">Incorrect</TableHead>
-              <TableHead className="text-right">Win %</TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-right hidden md:table-cell">Incorrect</TableHead>
+              <TableHead className="text-right hidden md:table-cell">Win %</TableHead>
+              <TableHead className="text-right hidden sm:table-cell">
                 <div className="flex items-center justify-end gap-1">
-                  <span>2nd Tiebreaker</span>
+                  <span className="hidden lg:inline">2nd Tiebreaker</span>
+                  <span className="lg:hidden">TB</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
@@ -102,40 +103,42 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
                   key={stat.user_id}
                   className={isCurrentUser ? 'bg-primary/5 font-medium' : ''}
                 >
-                  <TableCell>
+                  <TableCell className="py-2 md:py-4">
                     <div className="flex items-center gap-1">
                       {medal && <span className="text-lg">{medal}</span>}
                       {!medal && <span className="font-medium">#{rank}</span>}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span>{stat.profile?.username || 'Unknown'}</span>
-                      {isCurrentUser && (
-                        <Badge variant="secondary" className="text-xs">
-                          You
-                        </Badge>
-                      )}
-                      {hasNoGames && (
-                        <Badge variant="outline" className="text-xs text-muted-foreground">
-                          No picks yet
-                        </Badge>
-                      )}
+                  <TableCell className="py-2 md:py-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="truncate max-w-[120px] sm:max-w-none">{stat.profile?.username || 'Unknown'}</span>
+                      <div className="flex gap-1">
+                        {isCurrentUser && (
+                          <Badge variant="secondary" className="text-xs">
+                            You
+                          </Badge>
+                        )}
+                        {hasNoGames && (
+                          <Badge variant="outline" className="text-xs text-muted-foreground hidden sm:inline-flex">
+                            No picks yet
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right py-2 md:py-4">
                     <span className="font-bold text-lg">{stat.total_points}</span>
                   </TableCell>
-                  <TableCell className="text-right text-green-600 dark:text-green-400">
+                  <TableCell className="text-right text-green-600 dark:text-green-400 hidden sm:table-cell">
                     {stat.total_correct_picks}
                   </TableCell>
-                  <TableCell className="text-right text-red-600 dark:text-red-400">
+                  <TableCell className="text-right text-red-600 dark:text-red-400 hidden md:table-cell">
                     {stat.total_incorrect_picks}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right hidden md:table-cell">
                     {totalGames > 0 ? `${winRate}%` : '—'}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right hidden sm:table-cell">
                     {stat.tiebreaker_difference !== null ? (
                       <span className="font-medium">{stat.tiebreaker_difference}</span>
                     ) : (
@@ -148,6 +151,10 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
           </TableBody>
         </Table>
       </div>
+      {/* Mobile info note */}
+      <p className="text-xs text-muted-foreground mt-2 sm:hidden">
+        Tap a row to see full details. Rotate device for more columns.
+      </p>
     </TooltipProvider>
   )
 }

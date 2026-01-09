@@ -154,7 +154,7 @@ export default async function DashboardPage() {
           <div>
             <h3 className="font-semibold mb-2">Pool Rules</h3>
             <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-              <li><strong>Entry Fee:</strong> $10 to play. NO SPREADS.</li>
+              <li><strong>Entry Fee:</strong> $10 to play</li>
               <li><strong>Prizes:</strong> 70% first place, 30% second place</li>
               <li><strong>PayPal:</strong> thirt49@gmail.com (Please include your Pool username in the subject)</li>
               <li><strong>Venmo:</strong> @Grant-Hirt</li>
@@ -164,6 +164,7 @@ export default async function DashboardPage() {
           <div>
             <h3 className="font-semibold mb-2">Making Your Picks</h3>
             <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+              <li><strong>NO SPREADS</strong> - Just pick the winner straight up</li>
               <li>Pick the winner for each playoff game before it starts</li>
               <li>You can change your picks up until the game begins</li>
               <li>Once a game starts, your pick is locked in</li>

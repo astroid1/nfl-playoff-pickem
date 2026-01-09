@@ -4,15 +4,26 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { Menu } from 'lucide-react'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 export function Header() {
   const { user, signOut } = useAuth()
   const pathname = usePathname()
+  const [open, setOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
     toast.success('Signed out successfully')
+    setOpen(false)
   }
 
   const navItems = [
@@ -51,9 +62,47 @@ export function Header() {
           </div>
           <div className="flex items-center space-x-4">
             {user ? (
-              <Button variant="outline" onClick={handleSignOut}>
-                Sign Out
-              </Button>
+              <>
+                {/* Desktop sign out button */}
+                <Button variant="outline" onClick={handleSignOut} className="hidden md:inline-flex">
+                  Sign Out
+                </Button>
+                {/* Mobile menu */}
+                <Sheet open={open} onOpenChange={setOpen}>
+                  <SheetTrigger asChild className="md:hidden">
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-6 w-6" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[280px]">
+                    <SheetHeader>
+                      <SheetTitle>Menu</SheetTitle>
+                    </SheetHeader>
+                    <nav className="flex flex-col space-y-4 mt-6">
+                      {navItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setOpen(false)}
+                          className={`text-lg font-medium transition-colors hover:text-primary py-2 ${
+                            pathname === item.href
+                              ? 'text-foreground'
+                              : 'text-muted-foreground'
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                      <div className="border-t pt-4 mt-4">
+                        <Button variant="outline" onClick={handleSignOut} className="w-full">
+                          Sign Out
+                        </Button>
+                      </div>
+                    </nav>
+                  </SheetContent>
+                </Sheet>
+              </>
             ) : (
               <>
                 <Link href="/login">

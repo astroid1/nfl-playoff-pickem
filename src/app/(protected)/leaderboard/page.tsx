@@ -22,12 +22,12 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 px-0 md:px-4">
       <div>
-        <h1 className="text-3xl font-bold">Leaderboard</h1>
+        <h1 className="text-2xl md:text-3xl font-bold px-4 md:px-0">Leaderboard</h1>
       </div>
 
-      <Tabs defaultValue="overall" className="space-y-6">
+      <Tabs defaultValue="overall" className="space-y-4 md:space-y-6 px-4 md:px-0">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overall">Overall</TabsTrigger>
           <TabsTrigger value="weekly">By Round</TabsTrigger>
@@ -71,7 +71,8 @@ export default function LeaderboardPage() {
               <div className="border-t pt-4">
                 <h3 className="font-semibold mb-2">Pool Rules</h3>
                 <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                  <p><strong>Entry Fee:</strong> $10 to play. NO SPREADS.</p>
+                  <p><strong>Entry Fee:</strong> $10 to play</p>
+                  <p><strong>NO SPREADS</strong> - Just pick the winner straight up</p>
                   <p><strong>Prizes:</strong> 70% first place, 30% second place</p>
                   <p className="pt-2"><strong>Payment Options:</strong></p>
                   <ul className="list-disc list-inside ml-2 space-y-1">
