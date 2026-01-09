@@ -35,7 +35,7 @@ interface ApiSyncLogEntry {
 export class NFLApiClient {
     private baseUrl: string
     private apiKey: string
-    private supabase: ReturnType<typeof createClient> | null = null
+    private supabase: Awaited<ReturnType<typeof createClient>> | null = null
 
     constructor(apiKey?: string, baseUrl?: string) {
         this.apiKey = apiKey || NFL_API_KEY || ''
