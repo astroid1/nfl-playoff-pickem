@@ -144,11 +144,14 @@ async function seedGames() {
                 const status = mapGameStatus(game.game.status.short)
 
                 // Determine winning team if game is final
+                // API returns scores.home.total and scores.away.total
+                const homeScore = game.scores.home.total ?? null
+                const awayScore = game.scores.away.total ?? null
                 let winningTeamId = null
-                if (status === 'final' && game.scores.home.home !== null && game.scores.away.away !== null) {
-                    if (game.scores.home.home > game.scores.away.away) {
+                if (status === 'final' && homeScore !== null && awayScore !== null) {
+                    if (homeScore > awayScore) {
                         winningTeamId = homeTeamId
-                    } else if (game.scores.away.away > game.scores.home.home) {
+                    } else if (awayScore > homeScore) {
                         winningTeamId = awayTeamId
                     }
                 }
@@ -162,8 +165,8 @@ async function seedGames() {
                     away_team_id: awayTeamId,
                     scheduled_start_time: scheduledStartTime,
                     status,
-                    home_team_score: game.scores.home.home,
-                    away_team_score: game.scores.away.away,
+                    home_team_score: homeScore,
+                    away_team_score: awayScore,
                     winning_team_id: winningTeamId,
                     is_locked: status !== 'scheduled',
                     locked_at: status !== 'scheduled' ? scheduledStartTime : null,
