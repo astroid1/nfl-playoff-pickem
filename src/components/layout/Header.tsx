@@ -75,17 +75,17 @@ export function Header() {
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-[280px]">
+                  <SheetContent side="right" className="w-[280px] px-6">
                     <SheetHeader>
                       <SheetTitle>Menu</SheetTitle>
                     </SheetHeader>
-                    <nav className="flex flex-col space-y-4 mt-6">
+                    <nav className="flex flex-col mt-8">
                       {navItems.map((item) => (
                         <Link
                           key={item.href}
                           href={item.href}
                           onClick={() => setOpen(false)}
-                          className={`text-lg font-medium transition-colors hover:text-primary py-2 ${
+                          className={`text-lg font-medium transition-colors hover:text-primary py-4 border-b ${
                             pathname === item.href
                               ? 'text-foreground'
                               : 'text-muted-foreground'
@@ -94,7 +94,7 @@ export function Header() {
                           {item.label}
                         </Link>
                       ))}
-                      <div className="border-t pt-4 mt-4">
+                      <div className="pt-6">
                         <Button variant="outline" onClick={handleSignOut} className="w-full">
                           Sign Out
                         </Button>
