@@ -46,6 +46,25 @@ export function useSubmitPick() {
     }) => {
       if (!user) throw new Error('Must be logged in')
 
+      // Check if the game has started (is_locked or past start time)
+      const { data: game, error: gameError } = await supabase
+        .from('games')
+        .select('is_locked, scheduled_start_time')
+        .eq('id', gameId)
+        .single()
+
+      if (gameError) throw new Error('Failed to verify game status')
+
+      if (game.is_locked) {
+        throw new Error('Game has started - picks are locked')
+      }
+
+      // Double-check with current time in case is_locked hasn't been updated yet
+      const gameStartTime = new Date(game.scheduled_start_time)
+      if (new Date() >= gameStartTime) {
+        throw new Error('Game has started - picks are locked')
+      }
+
       // Check if pick already exists
       const { data: existingPick } = await supabase
         .from('picks')
@@ -125,6 +144,34 @@ export function useUpdateSuperbowlTiebreaker() {
       superbowlTotalPointsGuess: number | null
     }) => {
       if (!user) throw new Error('Must be logged in')
+
+      // Get the pick to find the game_id
+      const { data: pick, error: pickError } = await supabase
+        .from('picks')
+        .select('game_id')
+        .eq('id', pickId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (pickError) throw new Error('Failed to find pick')
+
+      // Check if the game has started
+      const { data: game, error: gameError } = await supabase
+        .from('games')
+        .select('is_locked, scheduled_start_time')
+        .eq('id', pick.game_id)
+        .single()
+
+      if (gameError) throw new Error('Failed to verify game status')
+
+      if (game.is_locked) {
+        throw new Error('Game has started - picks are locked')
+      }
+
+      const gameStartTime = new Date(game.scheduled_start_time)
+      if (new Date() >= gameStartTime) {
+        throw new Error('Game has started - picks are locked')
+      }
 
       const { data, error } = await supabase
         .from('picks')
