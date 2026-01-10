@@ -152,8 +152,21 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
 
   const isGameStarted = isLocked || isInProgress || isFinal
 
+  // Determine if the user's pick won (for final games)
+  const getPickResult = () => {
+    if (!isFinal || !selectedTeam || game.home_team_score === null || game.away_team_score === null) {
+      return null
+    }
+    const winningTeamId = game.home_team_score > game.away_team_score
+      ? game.home_team.id
+      : game.away_team.id
+    return selectedTeam === winningTeamId ? 'won' : 'lost'
+  }
+
+  const pickResult = getPickResult()
+
   return (
-    <Card className={`${isGameStarted ? 'bg-muted/30' : ''} transition-all`}>
+    <Card className={`${isGameStarted ? 'bg-muted/30' : ''} ${pickResult === 'won' ? 'ring-2 ring-green-500' : ''} ${pickResult === 'lost' ? 'ring-2 ring-red-500' : ''} transition-all`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -310,6 +323,21 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
               )}
             </div>
           </TooltipProvider>
+        )}
+
+        {/* Pick Result Banner */}
+        {pickResult && (
+          <div className={`mt-4 p-3 rounded-lg text-center font-semibold ${
+            pickResult === 'won'
+              ? 'bg-green-500/20 text-green-600 dark:text-green-400'
+              : 'bg-red-500/20 text-red-600 dark:text-red-400'
+          }`}>
+            {pickResult === 'won' ? (
+              <span>✓ Correct! +{game.playoff_round.points_per_correct_pick} points</span>
+            ) : (
+              <span>✗ Incorrect</span>
+            )}
+          </div>
         )}
 
         {/* Pick Status Message */}

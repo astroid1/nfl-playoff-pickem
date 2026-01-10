@@ -96,15 +96,34 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
 
             {/* Score display */}
             {(game.status === 'in_progress' || game.status === 'final') && (
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{game.away_team.city} {game.away_team.name}</span>
-                  <span className="text-xl font-bold">{game.away_team_score}</span>
+              <div className="flex items-center justify-center gap-6 mt-2 py-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {game.away_team.logo_url && (
+                    <img src={game.away_team.logo_url} alt={game.away_team.name} className="h-8 w-8 object-contain" />
+                  )}
+                  <div className="text-center">
+                    <span className="text-sm font-medium block">{game.away_team.abbreviation}</span>
+                    <span className={`text-2xl font-bold ${game.status === 'final' && (game.away_team_score ?? 0) > (game.home_team_score ?? 0) ? 'text-green-600' : ''}`}>
+                      {game.away_team_score ?? 0}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-muted-foreground">-</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{game.home_team.city} {game.home_team.name}</span>
-                  <span className="text-xl font-bold">{game.home_team_score}</span>
+                <div className="flex flex-col items-center">
+                  {game.status === 'in_progress' && (
+                    <span className="text-xs text-green-600 font-medium animate-pulse">LIVE</span>
+                  )}
+                  <span className="text-muted-foreground text-lg">-</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-center">
+                    <span className="text-sm font-medium block">{game.home_team.abbreviation}</span>
+                    <span className={`text-2xl font-bold ${game.status === 'final' && (game.home_team_score ?? 0) > (game.away_team_score ?? 0) ? 'text-green-600' : ''}`}>
+                      {game.home_team_score ?? 0}
+                    </span>
+                  </div>
+                  {game.home_team.logo_url && (
+                    <img src={game.home_team.logo_url} alt={game.home_team.name} className="h-8 w-8 object-contain" />
+                  )}
                 </div>
               </div>
             )}

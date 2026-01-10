@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { LiveScoreboard } from '@/components/dashboard/LiveScoreboard'
 
 export const metadata = {
   title: "Alex's Pigskin Picks",
@@ -95,6 +96,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Scoreboard */}
+      <LiveScoreboard />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
