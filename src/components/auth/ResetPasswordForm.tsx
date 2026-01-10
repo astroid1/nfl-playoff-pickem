@@ -51,6 +51,9 @@ export function ResetPasswordForm() {
           <p className="text-sm text-muted-foreground">
             Click the link in the email to reset your password. The link will expire in 24 hours.
           </p>
+          <p className="text-sm text-muted-foreground">
+            Don't see the email? Check your spam or junk folder.
+          </p>
         </CardContent>
         <CardFooter>
           <Link href="/login" className="w-full">
