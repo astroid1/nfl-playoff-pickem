@@ -4,7 +4,6 @@ import { usePoolPicks } from '@/lib/hooks/usePoolPicks'
 import { useGames } from '@/lib/hooks/useGames'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 
 interface PoolPicksGridProps {
   weekNumber: number
@@ -72,38 +71,6 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
       picksByUserAndGame.get(pick.profile.id)!.set(pick.game_id, pick)
     })
 
-  const getPickBadge = (pick: any, game: any) => {
-    if (!pick) {
-      return <Badge variant="outline" className="text-xs">No pick</Badge>
-    }
-
-    const selectedTeam = pick.selected_team_id === game.home_team.id
-      ? game.home_team
-      : game.away_team
-
-    // Game status determines color
-    if (game.status === 'final' && pick.is_correct !== null) {
-      return (
-        <Badge
-          variant={pick.is_correct ? "default" : "destructive"}
-          className={cn(
-            "text-xs font-medium",
-            pick.is_correct && "bg-green-600 hover:bg-green-700"
-          )}
-        >
-          {selectedTeam.abbreviation} {pick.is_correct ? '✓' : '✗'}
-        </Badge>
-      )
-    }
-
-    // Game is in progress or locked but not final
-    return (
-      <Badge variant="secondary" className="text-xs">
-        {selectedTeam.abbreviation}
-      </Badge>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Games List */}
@@ -144,25 +111,104 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
           </CardHeader>
 
           <CardContent>
-            {/* User picks for this game */}
-            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {(users as any[]).map(user => {
+            {/* Group picks by team */}
+            {(() => {
+              // Group users by their pick
+              const awayTeamPickers: any[] = []
+              const homeTeamPickers: any[] = []
+              const noPickers: any[] = []
+
+              users.forEach(user => {
                 const userPicks = picksByUserAndGame.get(user.id)
                 const pick = userPicks?.get(game.id)
 
-                return (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between p-2 rounded-lg border"
-                  >
-                    <span className="text-sm font-medium truncate">
-                      {user.username}
-                    </span>
-                    {getPickBadge(pick, game)}
+                if (!pick) {
+                  noPickers.push({ user, pick: null })
+                } else if (pick.selected_team_id === game.away_team.id) {
+                  awayTeamPickers.push({ user, pick })
+                } else {
+                  homeTeamPickers.push({ user, pick })
+                }
+              })
+
+              return (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Away Team Picks */}
+                  <div className="rounded-lg border p-4">
+                    <div className="flex items-center gap-3 mb-3 pb-3 border-b">
+                      {game.away_team.logo_url ? (
+                        <img
+                          src={game.away_team.logo_url}
+                          alt={game.away_team.name}
+                          className="h-10 w-10 object-contain"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-sm font-bold">{game.away_team.abbreviation}</span>
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="font-semibold">{game.away_team.city} {game.away_team.name}</div>
+                        <div className="text-sm text-muted-foreground">{awayTeamPickers.length} pick{awayTeamPickers.length !== 1 ? 's' : ''}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      {awayTeamPickers.length > 0 ? (
+                        awayTeamPickers.map(({ user, pick }) => (
+                          <div key={user.id} className="flex items-center justify-between text-sm py-1">
+                            <span className="truncate">{user.username}</span>
+                            {game.status === 'final' && pick.is_correct !== null && (
+                              <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
+                                {pick.is_correct ? '✓' : '✗'}
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No picks</p>
+                      )}
+                    </div>
                   </div>
-                )
-              })}
-            </div>
+
+                  {/* Home Team Picks */}
+                  <div className="rounded-lg border p-4">
+                    <div className="flex items-center gap-3 mb-3 pb-3 border-b">
+                      {game.home_team.logo_url ? (
+                        <img
+                          src={game.home_team.logo_url}
+                          alt={game.home_team.name}
+                          className="h-10 w-10 object-contain"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-sm font-bold">{game.home_team.abbreviation}</span>
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="font-semibold">{game.home_team.city} {game.home_team.name}</div>
+                        <div className="text-sm text-muted-foreground">{homeTeamPickers.length} pick{homeTeamPickers.length !== 1 ? 's' : ''}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      {homeTeamPickers.length > 0 ? (
+                        homeTeamPickers.map(({ user, pick }) => (
+                          <div key={user.id} className="flex items-center justify-between text-sm py-1">
+                            <span className="truncate">{user.username}</span>
+                            {game.status === 'final' && pick.is_correct !== null && (
+                              <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
+                                {pick.is_correct ? '✓' : '✗'}
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No picks</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             {users.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
