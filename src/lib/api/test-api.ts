@@ -24,9 +24,9 @@ async function testApi() {
     console.log(`Base URL: ${NFL_API_BASE_URL}\n`)
 
     try {
-        // Fetch games for 2024 season (playoffs are 2024-2025)
-        console.log('Fetching 2024 season games...')
-        const gamesResponse = await fetch(`${NFL_API_BASE_URL}/games?league=1&season=2024`, {
+        // Fetch games for 2025 season (playoffs are January 2026)
+        console.log('Fetching 2025 season games...')
+        const gamesResponse = await fetch(`${NFL_API_BASE_URL}/games?league=1&season=2025`, {
             method: 'GET',
             headers: {
                 'x-apisports-key': NFL_API_KEY,
@@ -73,16 +73,11 @@ async function testApi() {
             console.log('  scores.away.away:', completedGame.scores?.away?.away)
         }
 
-        // Show a live game if any
-        const liveGame = gamesData.response.find((g: any) => {
-            const status = g.game?.status?.short
-            return status && !['NS', 'FT', 'AET', 'PEN'].includes(status)
+        // Show all playoff games
+        console.log('\n=== ALL PLAYOFF GAMES ===')
+        playoffGames.forEach((g: any) => {
+            console.log(`${g.game.id}: ${g.teams.away?.name || 'TBD'} @ ${g.teams.home?.name || 'TBD'} - ${g.game.week} - Status: ${g.game.status.short} - Score: ${g.scores.away?.total ?? '-'} - ${g.scores.home?.total ?? '-'}`)
         })
-
-        if (liveGame) {
-            console.log('\n=== LIVE GAME STRUCTURE ===')
-            console.log(JSON.stringify(liveGame, null, 2))
-        }
 
         // Show rate limit
         const rateLimitRemaining = gamesResponse.headers.get('x-ratelimit-requests-remaining')
