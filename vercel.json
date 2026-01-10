@@ -7,23 +7,15 @@
   "crons": [
     {
       "path": "/api/cron/lock-games",
-      "schedule": "* * * * *"
+      "schedule": "* 13-23,0-5 * * *"
     },
     {
       "path": "/api/cron/sync-scores",
-      "schedule": "*/2 * * * *"
+      "schedule": "*/2 13-23,0-5 * * *"
     },
     {
       "path": "/api/cron/calculate-stats",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/send-reminders",
-      "schedule": "0 13 * * *"
-    },
-    {
-      "path": "/api/cron/send-weekly-recap",
-      "schedule": "0 14 * * 1"
+      "schedule": "*/5 13-23,0-5 * * *"
     }
   ]
 }
