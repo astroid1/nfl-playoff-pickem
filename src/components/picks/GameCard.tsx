@@ -150,8 +150,10 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
     return <Badge variant="outline">Open</Badge>
   }
 
+  const isGameStarted = isLocked || isInProgress || isFinal
+
   return (
-    <Card className={`${isLocked ? 'opacity-90' : ''} transition-all`}>
+    <Card className={`${isGameStarted ? 'bg-muted/30' : ''} transition-all`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -189,10 +191,10 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
               <img
                 src={game.away_team.logo_url}
                 alt={`${game.away_team.city} ${game.away_team.name}`}
-                className="h-12 w-12 object-contain"
+                className={`h-12 w-12 object-contain ${isGameStarted ? 'grayscale opacity-70' : ''}`}
               />
             ) : (
-              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+              <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center ${isGameStarted ? 'opacity-70' : ''}`}>
                 <span className="text-xl font-bold">{game.away_team.abbreviation}</span>
               </div>
             )}
@@ -200,7 +202,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
               <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
                 Away
               </div>
-              <div className="font-semibold">
+              <div className={`font-semibold ${isGameStarted ? 'text-muted-foreground' : ''}`}>
                 {game.away_team.city} {game.away_team.name}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -239,10 +241,10 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
               <img
                 src={game.home_team.logo_url}
                 alt={`${game.home_team.city} ${game.home_team.name}`}
-                className="h-12 w-12 object-contain"
+                className={`h-12 w-12 object-contain ${isGameStarted ? 'grayscale opacity-70' : ''}`}
               />
             ) : (
-              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+              <div className={`h-12 w-12 rounded-full bg-muted flex items-center justify-center ${isGameStarted ? 'opacity-70' : ''}`}>
                 <span className="text-xl font-bold">{game.home_team.abbreviation}</span>
               </div>
             )}
@@ -250,7 +252,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
               <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
                 Home
               </div>
-              <div className="font-semibold">
+              <div className={`font-semibold ${isGameStarted ? 'text-muted-foreground' : ''}`}>
                 {game.home_team.city} {game.home_team.name}
               </div>
               <div className="text-sm text-muted-foreground">
