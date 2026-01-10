@@ -15,11 +15,12 @@ import { Badge } from '@/components/ui/badge'
 interface WeeklyLeaderboardTableProps {
   season: number
   weekNumber: number
+  showAllPlayers?: boolean
 }
 
-export function WeeklyLeaderboardTable({ season, weekNumber }: WeeklyLeaderboardTableProps) {
+export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = false }: WeeklyLeaderboardTableProps) {
   const { user } = useAuth()
-  const { data: standings, isLoading } = useWeeklyLeaderboard(season, weekNumber)
+  const { data: standings, isLoading } = useWeeklyLeaderboard(season, weekNumber, showAllPlayers)
 
   if (isLoading) {
     return (

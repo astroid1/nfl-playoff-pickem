@@ -135,7 +135,7 @@ export default function LeaderboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <WeeklyLeaderboardTable season={currentSeason} weekNumber={selectedWeek} />
+              <WeeklyLeaderboardTable season={currentSeason} weekNumber={selectedWeek} showAllPlayers />
             </CardContent>
           </Card>
         </TabsContent>
