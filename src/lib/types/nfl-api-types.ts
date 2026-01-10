@@ -53,10 +53,14 @@ export type NFLGameStatus =
     | 'WO'    // WalkOver
     | 'LIVE'  // In Progress
 
-// Score data
+// Score data for a team (quarter breakdown + total)
 export interface NFLScore {
-    home: number | null
-    away: number | null
+    quarter_1: number | null
+    quarter_2: number | null
+    quarter_3: number | null
+    quarter_4: number | null
+    overtime: number | null
+    total: number | null
 }
 
 // Game data from API

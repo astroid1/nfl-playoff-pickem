@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
                 }
 
                 const newStatus = mapGameStatus(apiGame.game.status.short)
-                const homeScore = apiGame.scores.home.home
-                const awayScore = apiGame.scores.away.away
+                // API returns scores.home.total and scores.away.total
+                const homeScore = apiGame.scores.home.total ?? null
+                const awayScore = apiGame.scores.away.total ?? null
 
                 // Determine winning team if game is final
                 let winningTeamId = null

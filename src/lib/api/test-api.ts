@@ -1,5 +1,5 @@
 /**
- * Test NFL API connection
+ * Test NFL API connection and inspect score structure
  * Run with: npx tsx src/lib/api/test-api.ts
  */
 
@@ -24,57 +24,70 @@ async function testApi() {
     console.log(`Base URL: ${NFL_API_BASE_URL}\n`)
 
     try {
-        // Test 1: Check API status
-        console.log('Test 1: Checking API status...')
-        const statusResponse = await fetch(`${NFL_API_BASE_URL}/status`, {
+        // Fetch games for 2024 season (playoffs are 2024-2025)
+        console.log('Fetching 2024 season games...')
+        const gamesResponse = await fetch(`${NFL_API_BASE_URL}/games?league=1&season=2024`, {
             method: 'GET',
             headers: {
                 'x-apisports-key': NFL_API_KEY,
             },
         })
 
-        console.log(`Status Code: ${statusResponse.status}`)
-
-        if (!statusResponse.ok) {
-            const errorText = await statusResponse.text()
-            console.error(`❌ API request failed: ${statusResponse.status} ${statusResponse.statusText}`)
-            console.error('Response:', errorText)
+        if (!gamesResponse.ok) {
+            console.error(`❌ Request failed: ${gamesResponse.status}`)
             process.exit(1)
         }
 
-        const statusData = await statusResponse.json()
-        console.log('✅ API Status:', JSON.stringify(statusData, null, 2))
+        const gamesData = await gamesResponse.json()
+        console.log(`Found ${gamesData.results} games`)
 
-        // Test 2: Fetch teams
-        console.log('\nTest 2: Fetching NFL teams...')
-        const teamsResponse = await fetch(`${NFL_API_BASE_URL}/teams?league=1&season=2025`, {
-            method: 'GET',
-            headers: {
-                'x-apisports-key': NFL_API_KEY,
-            },
+        // Find playoff games
+        const playoffGames = gamesData.response.filter((g: any) => {
+            const week = g.game?.week?.toLowerCase() || ''
+            return week.includes('wild') ||
+                   week.includes('divisional') ||
+                   week.includes('conference') ||
+                   week.includes('super')
         })
 
-        console.log(`Status Code: ${teamsResponse.status}`)
+        console.log(`Found ${playoffGames.length} playoff games\n`)
 
-        if (!teamsResponse.ok) {
-            const errorText = await teamsResponse.text()
-            console.error(`❌ Teams request failed: ${teamsResponse.status} ${teamsResponse.statusText}`)
-            console.error('Response:', errorText)
-            process.exit(1)
+        // Show score structure from a completed game
+        const completedGame = playoffGames.find((g: any) => g.game?.status?.short === 'FT')
+        if (completedGame) {
+            console.log('=== COMPLETED GAME STRUCTURE ===')
+            console.log('Game ID:', completedGame.game.id)
+            console.log('Status:', completedGame.game.status)
+            console.log('Week:', completedGame.game.week)
+            console.log('Teams:', completedGame.teams.home.name, 'vs', completedGame.teams.away.name)
+            console.log('')
+            console.log('SCORES OBJECT:')
+            console.log(JSON.stringify(completedGame.scores, null, 2))
+            console.log('')
+            console.log('Possible score access patterns:')
+            console.log('  scores.home:', completedGame.scores?.home)
+            console.log('  scores.away:', completedGame.scores?.away)
+            console.log('  scores.home.total:', completedGame.scores?.home?.total)
+            console.log('  scores.away.total:', completedGame.scores?.away?.total)
+            console.log('  scores.home.home:', completedGame.scores?.home?.home)
+            console.log('  scores.away.away:', completedGame.scores?.away?.away)
         }
 
-        const teamsData = await teamsResponse.json()
-        console.log(`✅ Found ${teamsData.results} teams`)
+        // Show a live game if any
+        const liveGame = gamesData.response.find((g: any) => {
+            const status = g.game?.status?.short
+            return status && !['NS', 'FT', 'AET', 'PEN'].includes(status)
+        })
 
-        // Show rate limit info
-        const rateLimit = teamsResponse.headers.get('x-ratelimit-requests-limit')
-        const rateLimitRemaining = teamsResponse.headers.get('x-ratelimit-requests-remaining')
-
-        if (rateLimit && rateLimitRemaining) {
-            console.log(`\n📊 Rate Limit: ${rateLimitRemaining}/${rateLimit} remaining`)
+        if (liveGame) {
+            console.log('\n=== LIVE GAME STRUCTURE ===')
+            console.log(JSON.stringify(liveGame, null, 2))
         }
 
-        console.log('\n🎉 API connection successful!')
+        // Show rate limit
+        const rateLimitRemaining = gamesResponse.headers.get('x-ratelimit-requests-remaining')
+        const rateLimit = gamesResponse.headers.get('x-ratelimit-requests-limit')
+        console.log(`\n📊 Rate Limit: ${rateLimitRemaining}/${rateLimit} remaining`)
 
     } catch (error) {
         console.error('❌ Test failed:', error)
