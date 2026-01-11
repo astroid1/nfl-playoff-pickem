@@ -5,6 +5,7 @@ import { PoolPicksGrid } from '@/components/pool-picks/PoolPicksGrid'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { LiveScoreboard } from '@/components/dashboard/LiveScoreboard'
 
 interface PageProps {
   params: Promise<{
@@ -28,6 +29,9 @@ export default function PoolPicksWeekPage({ params }: PageProps) {
           See everyone's picks for games that have started
         </p>
       </div>
+
+      {/* Live Scores */}
+      <LiveScoreboard showAllGames weekNumber={weekNumber} />
 
       {/* Info Card */}
       <Card className="bg-muted/50">

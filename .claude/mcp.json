@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "RapidAPI Hub - NFL API Data": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp.rapidapi.com",
+        "--header",
+        "x-api-host: nfl-api-data.p.rapidapi.com",
+        "--header",
+        "x-api-key: 874e02a48emshe1aaa7d89f17d60p1030ddjsn5cabcf8fd835"
+      ]
+    }
+  }
+}

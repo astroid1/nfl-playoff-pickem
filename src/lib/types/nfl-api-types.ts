@@ -82,7 +82,8 @@ export interface NFLGame {
         status: {
             short: NFLGameStatus
             long: string
-            timer: string | null
+            timer: string | null // Display clock (e.g., "12:34")
+            quarter?: number | null // Current quarter (1-4, 5+ for OT)
         }
     }
     league: {

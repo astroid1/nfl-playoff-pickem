@@ -215,6 +215,7 @@ export function transformRapidApiEvent(event: RapidApiEvent): NFLGame {
                 short: status,
                 long: event.status.type.description,
                 timer: event.status.displayClock || null,
+                quarter: event.status.period || null,
             },
         },
         league: {
