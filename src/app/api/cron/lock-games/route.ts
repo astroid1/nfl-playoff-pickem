@@ -4,19 +4,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 const CRON_SECRET = process.env.CRON_SECRET
 
 export async function GET(request: NextRequest) {
-    // Verify cron secret
+    // Verify cron secret - Vercel cron uses Authorization header or x-vercel-cron
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${CRON_SECRET}`) {
+    const isVercelCron = request.headers.get('x-vercel-cron') === '1'
+
+    if (!isVercelCron && authHeader !== `Bearer ${CRON_SECRET}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     try {
-        const supabase = await createClient()
+        const supabase = createServiceClient()
         const now = new Date().toISOString()
 
         // Find all unlocked games that should be locked

@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { getRapidApiClient, mapGameStatus } from '@/lib/api/nfl-api'
 
 const CRON_SECRET = process.env.CRON_SECRET
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     console.log('Authorization passed, starting sync...')
 
     try {
-        const supabase = await createClient()
+        const supabase = createServiceClient()
 
         // Find all games that are scheduled or in progress for today and nearby dates
         const { data: activeGames, error: fetchError } = await supabase

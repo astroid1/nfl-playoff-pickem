@@ -4,20 +4,22 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 const CRON_SECRET = process.env.CRON_SECRET
 const CURRENT_SEASON = parseInt(process.env.NEXT_PUBLIC_CURRENT_NFL_SEASON || new Date().getFullYear().toString())
 
 export async function GET(request: NextRequest) {
-    // Verify cron secret
+    // Verify cron secret - Vercel cron uses Authorization header or x-vercel-cron
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${CRON_SECRET}`) {
+    const isVercelCron = request.headers.get('x-vercel-cron') === '1'
+
+    if (!isVercelCron && authHeader !== `Bearer ${CRON_SECRET}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     try {
-        const supabase = await createClient()
+        const supabase = createServiceClient()
 
         // Call the database function to refresh user stats
         const { error } = await supabase.rpc('refresh_user_stats', {
