@@ -130,20 +130,20 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Wild Card</span>
-              <span className="font-bold">{stats?.wildcard_correct || 0} correct</span>
+              <span className="text-sm">Wild Card (2 pts each)</span>
+              <span className="font-bold">{stats?.wildcard_correct || 0} correct • {(stats?.wildcard_correct || 0) * 2} pts</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Divisional</span>
-              <span className="font-bold">{stats?.divisional_correct || 0} correct</span>
+              <span className="text-sm">Divisional (3 pts each)</span>
+              <span className="font-bold">{stats?.divisional_correct || 0} correct • {(stats?.divisional_correct || 0) * 3} pts</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Conference</span>
-              <span className="font-bold">{stats?.championship_correct || 0} correct</span>
+              <span className="text-sm">Conference (4 pts each)</span>
+              <span className="font-bold">{stats?.championship_correct || 0} correct • {(stats?.championship_correct || 0) * 4} pts</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Super Bowl</span>
-              <span className="font-bold">{stats?.superbowl_correct || 0} correct</span>
+              <span className="text-sm">Super Bowl (5 pts each)</span>
+              <span className="font-bold">{stats?.superbowl_correct || 0} correct • {(stats?.superbowl_correct || 0) * 5} pts</span>
             </div>
           </CardContent>
         </Card>
