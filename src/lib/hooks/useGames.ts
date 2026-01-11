@@ -31,7 +31,7 @@ export function useGames(weekNumber?: number, season?: number) {
       if (error) throw error
       return data || []
     },
-    refetchInterval: 60000, // Refetch every minute to check for game updates
+    refetchInterval: 30000, // Refetch every 30 seconds for live score updates
   })
 
   // Subscribe to realtime updates

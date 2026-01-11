@@ -7,7 +7,6 @@ import { usePicks, useSubmitPick } from '@/lib/hooks/usePicks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { LiveScoreboard } from '@/components/dashboard/LiveScoreboard'
 
 interface PageProps {
   params: Promise<{
@@ -101,9 +100,6 @@ export default function WeeklyPicksPage({ params }: PageProps) {
           Select your picks before the games start
         </p>
       </div>
-
-      {/* Live Scores */}
-      <LiveScoreboard showAllGames weekNumber={weekNumber} />
 
       {/* Games by Round */}
       {sortedRounds.map((roundName) => {

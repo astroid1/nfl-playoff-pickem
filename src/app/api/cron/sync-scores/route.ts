@@ -72,12 +72,18 @@ export async function GET(request: NextRequest) {
                     // If tied, winningTeamId stays null (though NFL playoff games can't tie)
                 }
 
+                // Get quarter and clock from API
+                const quarter = apiGame.game.status.quarter ?? null
+                const gameClock = apiGame.game.status.timer ?? null
+
                 // Update game in database
                 const updateData: any = {
                     status: newStatus,
                     home_team_score: homeScore,
                     away_team_score: awayScore,
                     winning_team_id: winningTeamId,
+                    quarter: quarter,
+                    game_clock: gameClock,
                     last_updated_at: new Date().toISOString(),
                 }
 

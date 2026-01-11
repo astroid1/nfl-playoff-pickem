@@ -30,6 +30,8 @@ interface Game {
   status: string
   home_team_score: number | null
   away_team_score: number | null
+  quarter: number | null
+  game_clock: string | null
   home_team: Team
   away_team: Team
   playoff_round: {
@@ -137,12 +139,22 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
     }
   }
 
+  // Format quarter display
+  const formatQuarter = (quarter: number | null | undefined): string => {
+    if (!quarter) return ''
+    if (quarter <= 4) return `Q${quarter}`
+    return 'OT'
+  }
+
   const getStatusBadge = () => {
     if (isFinal) {
       return <Badge variant="secondary">Final</Badge>
     }
     if (isInProgress) {
-      return <Badge variant="default" className="bg-green-600">Live</Badge>
+      const quarterStr = game.quarter ? formatQuarter(game.quarter) : ''
+      const clockStr = game.game_clock || ''
+      const displayText = quarterStr && clockStr ? `${quarterStr} ${clockStr}` : 'Live'
+      return <Badge variant="default" className="bg-green-600 animate-pulse">{displayText}</Badge>
     }
     if (isLocked) {
       return <Badge variant="destructive">Locked</Badge>

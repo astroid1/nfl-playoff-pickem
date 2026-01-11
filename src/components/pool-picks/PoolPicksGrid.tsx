@@ -11,6 +11,13 @@ interface PoolPicksGridProps {
   season?: number
 }
 
+// Format quarter display
+function formatQuarter(quarter: number | null | undefined): string {
+  if (!quarter) return ''
+  if (quarter <= 4) return `Q${quarter}`
+  return 'OT'
+}
+
 // Component to display picks for a single game
 function GamePicksCard({ game }: { game: any }) {
   const supabase = createClient()
@@ -49,7 +56,11 @@ function GamePicksCard({ game }: { game: any }) {
               <Badge variant="secondary">Final</Badge>
             )}
             {game.status === 'in_progress' && (
-              <Badge variant="default" className="bg-green-600">Live</Badge>
+              <Badge variant="default" className="bg-green-600 animate-pulse">
+                {game.quarter && game.game_clock
+                  ? `${formatQuarter(game.quarter)} ${game.game_clock}`
+                  : 'Live'}
+              </Badge>
             )}
             <span className="text-sm text-muted-foreground">
               {game.playoff_round.points_per_correct_pick} pts
@@ -73,7 +84,11 @@ function GamePicksCard({ game }: { game: any }) {
             </div>
             <div className="flex flex-col items-center">
               {game.status === 'in_progress' && (
-                <span className="text-xs text-green-600 font-medium animate-pulse">LIVE</span>
+                <span className="text-xs text-green-600 font-medium animate-pulse">
+                  {game.quarter && game.game_clock
+                    ? `${formatQuarter(game.quarter)} ${game.game_clock}`
+                    : 'LIVE'}
+                </span>
               )}
               <span className="text-muted-foreground text-lg">-</span>
             </div>
