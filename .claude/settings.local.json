@@ -29,7 +29,9 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd mobile sidebar menu and improve mobile responsiveness\n\n- Add hamburger menu with slide-out sidebar for mobile navigation\n- Move NO SPREADS info into Making Your Picks section \\(dashboard & leaderboard\\)\n- Make leaderboard tables responsive: hide secondary columns on mobile, show essential data\n- Add overflow-x-auto to tables for smooth scrolling when needed\n- Adjust padding and spacing for mobile screens\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit:*)",
       "Bash(cat:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

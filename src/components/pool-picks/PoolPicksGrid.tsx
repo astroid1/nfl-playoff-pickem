@@ -218,16 +218,18 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
     )
   }
 
-  // Filter to only locked games and sort by scheduled start time descending (most recent first)
-  const lockedGames = games
-    .filter(g => g.is_locked)
+  // Filter to games that have started (either is_locked flag OR scheduled time has passed)
+  // Sort by scheduled start time descending (most recent first)
+  const now = new Date()
+  const startedGames = games
+    .filter(g => g.is_locked || new Date(g.scheduled_start_time) <= now)
     .sort((a, b) => {
       const aTime = new Date(a.scheduled_start_time).getTime()
       const bTime = new Date(b.scheduled_start_time).getTime()
       return bTime - aTime
     })
 
-  if (lockedGames.length === 0) {
+  if (startedGames.length === 0) {
     return (
       <div className="text-center py-12">
         <Card>
@@ -246,7 +248,7 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
 
   return (
     <div className="space-y-6">
-      {lockedGames.map(game => (
+      {startedGames.map(game => (
         <GamePicksCard key={game.id} game={game} />
       ))}
     </div>

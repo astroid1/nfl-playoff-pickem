@@ -70,7 +70,12 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
     setTotalPointsGuess(currentPick?.superbowl_total_points_guess?.toString() || '')
   }, [currentPick?.selected_team_id, currentPick?.superbowl_total_points_guess])
 
-  const isLocked = game.is_locked
+  // Check if game has started based on scheduled time (not just API status or is_locked flag)
+  const scheduledTime = new Date(game.scheduled_start_time)
+  const hasGameTimeStarted = scheduledTime <= new Date()
+
+  // Game is effectively locked if: is_locked flag is set OR scheduled time has passed
+  const isLocked = game.is_locked || hasGameTimeStarted
   const isInProgress = game.status === 'in_progress'
   const isFinal = game.status === 'final'
 
