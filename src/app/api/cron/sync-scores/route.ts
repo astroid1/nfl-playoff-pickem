@@ -15,12 +15,21 @@ const CURRENT_SEASON = parseInt(process.env.CURRENT_NFL_SEASON || '2025')
 export async function GET(request: NextRequest) {
     console.log('sync-scores cron started at', new Date().toISOString())
 
-    // Verify cron secret
+    // Verify cron secret - Vercel cron uses Authorization header
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${CRON_SECRET}`) {
-        console.log('Unauthorized request')
+    const isVercelCron = request.headers.get('x-vercel-cron') === '1'
+
+    console.log('Auth header present:', !!authHeader)
+    console.log('Is Vercel cron:', isVercelCron)
+    console.log('CRON_SECRET set:', !!CRON_SECRET)
+
+    // Allow if: valid auth header OR Vercel cron header is present
+    if (!isVercelCron && authHeader !== `Bearer ${CRON_SECRET}`) {
+        console.log('Unauthorized request - rejecting')
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('Authorization passed, starting sync...')
 
     try {
         const supabase = await createClient()
