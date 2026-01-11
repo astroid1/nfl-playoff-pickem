@@ -1,11 +1,13 @@
 /**
  * Cron job to sync live scores from NFL API
  * Runs every 2 minutes via Vercel cron
+ *
+ * Uses the scoreboard-day endpoint for more reliable score fetching
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { nflApi, mapGameStatus } from '@/lib/api/nfl-api'
+import { getRapidApiClient, mapGameStatus } from '@/lib/api/nfl-api'
 
 const CRON_SECRET = process.env.CRON_SECRET
 const CURRENT_SEASON = parseInt(process.env.CURRENT_NFL_SEASON || '2025')
@@ -20,10 +22,19 @@ export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient()
 
-        // Find all games that are scheduled or in progress
+        // Find all games that are scheduled or in progress for today and nearby dates
         const { data: activeGames, error: fetchError } = await supabase
             .from('games')
-            .select('id, api_game_id, home_team_id, away_team_id, status')
+            .select(`
+                id,
+                api_game_id,
+                home_team_id,
+                away_team_id,
+                status,
+                scheduled_start_time,
+                home_team:teams!home_team_id(abbreviation),
+                away_team:teams!away_team_id(abbreviation)
+            `)
             .in('status', ['scheduled', 'in_progress'])
 
         if (fetchError) {
@@ -38,81 +49,69 @@ export async function GET(request: NextRequest) {
             })
         }
 
-        console.log(`Syncing ${activeGames.length} active games...`)
+        console.log(`Found ${activeGames.length} active games to sync`)
+
+        // Get today's date in YYYYMMDD format
+        const today = new Date()
+        const dateStr = today.toISOString().split('T')[0].replace(/-/g, '')
+
+        // Fetch today's scoreboard
+        const rapidApiClient = getRapidApiClient()
+        const apiGames = await rapidApiClient.fetchScoreboardByDay(dateStr)
+
+        console.log(`API returned ${apiGames.length} games for ${dateStr}`)
 
         let updated = 0
         let errors = 0
         const updatedGameIds: string[] = []
 
-        // Fetch and update each game
-        for (const game of activeGames) {
+        // Match API games to our database games by team abbreviations
+        for (const dbGame of activeGames) {
             try {
-                // Fetch latest data from API
-                const apiGame = await nflApi.fetchGameById(game.api_game_id)
+                const homeAbbr = (dbGame.home_team as any)?.abbreviation
+                const awayAbbr = (dbGame.away_team as any)?.abbreviation
+
+                if (!homeAbbr || !awayAbbr) {
+                    console.error(`Game ${dbGame.id} missing team abbreviations`)
+                    errors++
+                    continue
+                }
+
+                // Find matching API game by team abbreviations
+                const apiGame = apiGames.find(g =>
+                    g.teams.home.code === homeAbbr && g.teams.away.code === awayAbbr
+                )
 
                 if (!apiGame) {
-                    console.error(`Game ${game.api_game_id} not found in API`)
-                    errors++
-                    continue
-                }
+                    // Game might be on a different day, try to fetch that day's scoreboard
+                    const gameDate = new Date(dbGame.scheduled_start_time)
+                    const gameDateStr = gameDate.toISOString().split('T')[0].replace(/-/g, '')
 
-                const newStatus = mapGameStatus(apiGame.game.status.short)
-                // API returns scores.home.total and scores.away.total
-                const homeScore = apiGame.scores.home.total ?? null
-                const awayScore = apiGame.scores.away.total ?? null
+                    if (gameDateStr !== dateStr) {
+                        console.log(`Game ${awayAbbr}@${homeAbbr} is on ${gameDateStr}, fetching that day...`)
+                        const dayGames = await rapidApiClient.fetchScoreboardByDay(gameDateStr)
+                        const matchingGame = dayGames.find(g =>
+                            g.teams.home.code === homeAbbr && g.teams.away.code === awayAbbr
+                        )
 
-                // Determine winning team if game is final
-                let winningTeamId = null
-                if (newStatus === 'final' && homeScore !== null && awayScore !== null) {
-                    if (homeScore > awayScore) {
-                        winningTeamId = game.home_team_id
-                    } else if (awayScore > homeScore) {
-                        winningTeamId = game.away_team_id
+                        if (matchingGame) {
+                            await updateGameFromApi(supabase, dbGame, matchingGame)
+                            updated++
+                            updatedGameIds.push(String(dbGame.id))
+                            continue
+                        }
                     }
-                    // If tied, winningTeamId stays null (though NFL playoff games can't tie)
-                }
 
-                // Get quarter and clock from API
-                const quarter = apiGame.game.status.quarter ?? null
-                const gameClock = apiGame.game.status.timer ?? null
-
-                // Update game in database
-                const updateData: any = {
-                    status: newStatus,
-                    home_team_score: homeScore,
-                    away_team_score: awayScore,
-                    winning_team_id: winningTeamId,
-                    quarter: quarter,
-                    game_clock: gameClock,
-                    last_updated_at: new Date().toISOString(),
-                }
-
-                // Set actual_start_time if game just started
-                if (game.status === 'scheduled' && newStatus === 'in_progress') {
-                    updateData.actual_start_time = new Date().toISOString()
-                }
-
-                const { error: updateError } = await supabase
-                    .from('games')
-                    .update(updateData)
-                    .eq('id', game.id)
-
-                if (updateError) {
-                    console.error(`Error updating game ${game.api_game_id}:`, updateError.message)
-                    errors++
+                    console.log(`No API match for ${awayAbbr}@${homeAbbr}`)
                     continue
                 }
 
+                await updateGameFromApi(supabase, dbGame, apiGame)
                 updated++
-                updatedGameIds.push(game.api_game_id)
-
-                console.log(`✅ Updated game ${game.api_game_id}: ${newStatus}`)
-
-                // Small delay to avoid rate limiting
-                await new Promise(resolve => setTimeout(resolve, 100))
+                updatedGameIds.push(String(dbGame.id))
 
             } catch (error) {
-                console.error(`Error syncing game ${game.api_game_id}:`, error)
+                console.error(`Error syncing game ${dbGame.id}:`, error)
                 errors++
             }
         }
@@ -122,7 +121,6 @@ export async function GET(request: NextRequest) {
 
         if (calcError) {
             console.error('Error calculating points:', calcError)
-            // Don't throw - scores are updated, points calc is secondary
         }
 
         // Refresh user stats for leaderboard
@@ -152,4 +150,54 @@ export async function GET(request: NextRequest) {
             { status: 500 }
         )
     }
+}
+
+async function updateGameFromApi(supabase: any, dbGame: any, apiGame: any) {
+    const newStatus = mapGameStatus(apiGame.game.status.short)
+    const homeScore = apiGame.scores.home.total ?? null
+    const awayScore = apiGame.scores.away.total ?? null
+
+    // Determine winning team if game is final
+    let winningTeamId = null
+    if (newStatus === 'final' && homeScore !== null && awayScore !== null) {
+        if (homeScore > awayScore) {
+            winningTeamId = dbGame.home_team_id
+        } else if (awayScore > homeScore) {
+            winningTeamId = dbGame.away_team_id
+        }
+    }
+
+    // Get quarter and clock from API
+    const quarter = apiGame.game.status.quarter ?? null
+    const gameClock = apiGame.game.status.timer ?? null
+
+    // Update game in database
+    const updateData: any = {
+        status: newStatus,
+        home_team_score: homeScore,
+        away_team_score: awayScore,
+        winning_team_id: winningTeamId,
+        quarter: quarter,
+        game_clock: gameClock,
+        api_game_id: String(apiGame.game.id), // Update to correct API game ID
+        last_updated_at: new Date().toISOString(),
+    }
+
+    // Set actual_start_time if game just started
+    if (dbGame.status === 'scheduled' && newStatus === 'in_progress') {
+        updateData.actual_start_time = new Date().toISOString()
+    }
+
+    const { error: updateError } = await supabase
+        .from('games')
+        .update(updateData)
+        .eq('id', dbGame.id)
+
+    if (updateError) {
+        throw updateError
+    }
+
+    const homeAbbr = (dbGame.home_team as any)?.abbreviation
+    const awayAbbr = (dbGame.away_team as any)?.abbreviation
+    console.log(`✅ Updated ${awayAbbr}@${homeAbbr}: ${newStatus} (${awayScore}-${homeScore}) Q${quarter} ${gameClock || ''}`)
 }
