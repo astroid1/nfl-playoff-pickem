@@ -10,27 +10,27 @@ import { resolve } from 'path'
 config({ path: resolve(process.cwd(), '.env.local') })
 
 import { createClient } from '@supabase/supabase-js'
-import { NFLApiClient } from './nfl-client'
+import { RapidApiNFLClient } from './rapidapi-nfl-client'
 import { mapGameStatus, mapPlayoffRound } from '../types/nfl-api-types'
+import { RAPIDAPI_SEASON_TYPES } from '../types/rapidapi-nfl-types'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const NFL_API_KEY = process.env.NFL_API_KEY!
-const NFL_API_BASE_URL = process.env.NFL_API_BASE_URL || 'https://v1.american-football.api-sports.io'
-const CURRENT_SEASON = parseInt(process.env.NEXT_PUBLIC_CURRENT_NFL_SEASON || '2025')
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY!
+const CURRENT_SEASON = parseInt(process.env.CURRENT_NFL_SEASON || '2025')
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
     process.exit(1)
 }
 
-if (!NFL_API_KEY) {
-    console.error('Missing required environment variable: NFL_API_KEY')
+if (!RAPIDAPI_KEY) {
+    console.error('Missing required environment variable: RAPIDAPI_KEY')
     process.exit(1)
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-const nflClient = new NFLApiClient(NFL_API_KEY, NFL_API_BASE_URL)
+const nflClient = new RapidApiNFLClient(RAPIDAPI_KEY)
 
 // Map week numbers to playoff rounds
 function getWeekNumber(stage: string): number {
@@ -79,27 +79,24 @@ async function seedGames() {
         const teamMap = new Map(teams.map(t => [t.api_team_id, t.id]))
         console.log(`Loaded ${teams.length} teams`)
 
-        // Fetch games from API-Sports
-        // For 2025 playoff season (playoffs in January 2025), use season 2024
-        // For 2026 playoff season (playoffs in January 2026), use season 2025
-        // API-Sports uses the year the regular season started
+        // Fetch playoff games from RapidAPI
+        // RapidAPI uses the year the regular season started
+        // For 2025 season playoffs (January 2026), use season 2025
         const apiSeason = CURRENT_SEASON
-        console.log(`Fetching games from API-Sports (season ${apiSeason})...`)
+        console.log(`Fetching playoff games from RapidAPI (season ${apiSeason})...`)
 
-        const games = await nflClient.fetchGames(apiSeason, 1) // NFL league ID = 1
+        // Use the dedicated playoff games endpoint with seasontype=3 (postseason)
+        const playoffGames = await nflClient.fetchPlayoffGames(apiSeason)
 
-        // Filter for playoff games only
-        // Note: API uses "Post Season" as the stage, not individual round names
-        // Exclude Pro Bowl games
-        const playoffGames = games.filter(g => {
+        // Filter out Pro Bowl games
+        const filteredGames = playoffGames.filter(g => {
             const stage = g.game.stage.toLowerCase()
-            const week = g.game.week.toLowerCase()
-            return (stage === 'post season' || stage.includes('post')) && !week.includes('pro bowl')
+            return !stage.includes('pro bowl')
         })
 
-        console.log(`Found ${playoffGames.length} playoff games`)
+        console.log(`Found ${filteredGames.length} playoff games (excluding Pro Bowl)`)
 
-        if (playoffGames.length === 0) {
+        if (filteredGames.length === 0) {
             console.log('⚠️  No playoff games found. The playoff schedule may not be available yet.')
             console.log('You can manually add games later or run this script again when the schedule is released.')
             return
@@ -111,7 +108,7 @@ async function seedGames() {
         let errors = 0
         let skippedTbd = 0
 
-        for (const game of playoffGames) {
+        for (const game of filteredGames) {
             try {
                 // Skip games with TBD teams (teams will be determined after earlier rounds)
                 if (!game.teams.home.id || !game.teams.away.id) {
@@ -201,7 +198,7 @@ async function seedGames() {
         }
 
         console.log('\n📊 Seed Summary:')
-        console.log(`  Total playoff games found: ${playoffGames.length}`)
+        console.log(`  Total playoff games found: ${filteredGames.length}`)
         console.log(`  Successfully upserted: ${inserted + updated}`)
         console.log(`  Skipped (TBD teams): ${skippedTbd}`)
         console.log(`  Errors: ${errors}`)

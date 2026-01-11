@@ -5,10 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { nflApiClient } from '@/lib/api/nfl-client'
-import { mapGameStatus } from '@/lib/types/nfl-api-types'
+import { nflApi, mapGameStatus } from '@/lib/api/nfl-api'
 
 const CRON_SECRET = process.env.CRON_SECRET
+const CURRENT_SEASON = parseInt(process.env.CURRENT_NFL_SEASON || '2025')
 
 export async function GET(request: NextRequest) {
     // Verify cron secret
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         for (const game of activeGames) {
             try {
                 // Fetch latest data from API
-                const apiGame = await nflApiClient.fetchGameById(parseInt(game.api_game_id))
+                const apiGame = await nflApi.fetchGameById(game.api_game_id)
 
                 if (!apiGame) {
                     console.error(`Game ${game.api_game_id} not found in API`)
@@ -117,6 +117,13 @@ export async function GET(request: NextRequest) {
         if (calcError) {
             console.error('Error calculating points:', calcError)
             // Don't throw - scores are updated, points calc is secondary
+        }
+
+        // Refresh user stats for leaderboard
+        const { error: statsError } = await supabase.rpc('refresh_user_stats', { p_season: CURRENT_SEASON })
+
+        if (statsError) {
+            console.error('Error refreshing user stats:', statsError)
         }
 
         console.log(`✅ Synced ${updated} games, ${errors} errors`)

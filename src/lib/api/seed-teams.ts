@@ -10,34 +10,33 @@ import { resolve } from 'path'
 config({ path: resolve(process.cwd(), '.env.local') })
 
 import { createClient } from '@supabase/supabase-js'
-import { NFLApiClient } from './nfl-client'
-import { extractConference, extractDivision } from '../types/nfl-api-types'
+import { RapidApiNFLClient } from './rapidapi-nfl-client'
+import { getTeamConference, getTeamDivision } from './rapidapi-transformers'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const NFL_API_KEY = process.env.NFL_API_KEY!
-const NFL_API_BASE_URL = process.env.NFL_API_BASE_URL || 'https://v1.american-football.api-sports.io'
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY!
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
     process.exit(1)
 }
 
-if (!NFL_API_KEY) {
-    console.error('Missing required environment variable: NFL_API_KEY')
+if (!RAPIDAPI_KEY) {
+    console.error('Missing required environment variable: RAPIDAPI_KEY')
     process.exit(1)
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-const nflClient = new NFLApiClient(NFL_API_KEY, NFL_API_BASE_URL)
+const nflClient = new RapidApiNFLClient(RAPIDAPI_KEY)
 
 async function seedTeams() {
     console.log('🏈 Starting NFL teams seed...')
 
     try {
-        // Fetch teams from API-Sports
-        console.log('Fetching teams from API-Sports...')
-        const teams = await nflClient.fetchTeams(1, 2024) // NFL league ID = 1, season 2024
+        // Fetch teams from RapidAPI
+        console.log('Fetching teams from RapidAPI...')
+        const teams = await nflClient.fetchTeams()
 
         console.log(`Found ${teams.length} teams`)
 
@@ -48,12 +47,13 @@ async function seedTeams() {
 
         for (const team of teams) {
             try {
-                const conference = extractConference(team)
-                const division = extractDivision(team)
+                // Use lookup tables for conference and division
+                const conference = getTeamConference(team.code)
+                const division = getTeamDivision(team.code)
 
                 const teamData = {
                     api_team_id: String(team.id),
-                    city: team.city || team.name, // Some teams might not have separate city
+                    city: team.city || team.name.split(' ')[0], // Extract city from team data
                     name: team.name,
                     abbreviation: team.code,
                     logo_url: team.logo,
