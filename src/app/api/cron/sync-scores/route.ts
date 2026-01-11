@@ -13,9 +13,12 @@ const CRON_SECRET = process.env.CRON_SECRET
 const CURRENT_SEASON = parseInt(process.env.CURRENT_NFL_SEASON || '2025')
 
 export async function GET(request: NextRequest) {
+    console.log('sync-scores cron started at', new Date().toISOString())
+
     // Verify cron secret
     const authHeader = request.headers.get('authorization')
     if (authHeader !== `Bearer ${CRON_SECRET}`) {
+        console.log('Unauthorized request')
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
