@@ -70,10 +70,18 @@ export function getRapidApiClient(): RapidApiNFLClient {
 }
 
 /**
- * Get the API-Sports client specifically
+ * Get the API-Sports client specifically (for accessing extended methods)
  */
 export function getApiSportsClient(): NFLApiClient {
     return nflApiClient
+}
+
+/**
+ * Extended API-Sports client interface with additional methods
+ */
+export interface IApiSportsNFLClient extends INFLApiClient {
+    fetchGamesByDate(date: string, leagueId?: number): Promise<NFLGame[]>
+    fetchLiveScores(leagueId?: number): Promise<NFLGame[]>
 }
 
 /**

@@ -3,7 +3,7 @@
  * Handles all interactions with the API-Sports NFL endpoint
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import type {
     NFLApiResponse,
     NFLGame,
@@ -35,7 +35,7 @@ interface ApiSyncLogEntry {
 export class NFLApiClient {
     private baseUrl: string
     private apiKey: string
-    private supabase: Awaited<ReturnType<typeof createClient>> | null = null
+    private supabase: ReturnType<typeof createServiceClient> | null = null
 
     constructor(apiKey?: string, baseUrl?: string) {
         this.apiKey = apiKey || NFL_API_KEY || ''
@@ -45,10 +45,10 @@ export class NFLApiClient {
     /**
      * Initialize Supabase client for logging (server-side only)
      */
-    private async initSupabase() {
+    private initSupabase() {
         if (!this.supabase) {
             try {
-                this.supabase = await createClient()
+                this.supabase = createServiceClient()
             } catch (error) {
                 // If we're outside Next.js context (e.g., running seed scripts),
                 // Supabase client won't work. That's okay, we'll skip logging.
@@ -64,7 +64,7 @@ export class NFLApiClient {
      */
     private async logSync(entry: ApiSyncLogEntry) {
         try {
-            const supabase = await this.initSupabase()
+            const supabase = this.initSupabase()
             if (!supabase) {
                 // Skip logging if Supabase isn't available
                 return
@@ -324,6 +324,93 @@ export class NFLApiClient {
     async fetchLeagues(): Promise<NFLLeague[]> {
         const response = await this.request<NFLLeague>('/leagues')
         return response.response
+    }
+
+    /**
+     * Fetch games by date
+     * Uses the /games endpoint with date parameter
+     * Date format: YYYY-MM-DD
+     */
+    async fetchGamesByDate(date: string, leagueId: number = NFL_LEAGUE_ID): Promise<NFLGame[]> {
+        const startTime = Date.now()
+        const started_at = new Date().toISOString()
+
+        try {
+            const response = await this.request<NFLGame>('/games', {
+                league: leagueId,
+                date,
+            })
+            const responseTime = Date.now() - startTime
+
+            await this.logSync({
+                sync_type: 'scores',
+                status: 'success',
+                api_provider: 'api-sports',
+                records_updated: response.results,
+                response_time_ms: responseTime,
+                started_at,
+            })
+
+            return response.response
+        } catch (error) {
+            const responseTime = Date.now() - startTime
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+            await this.logSync({
+                sync_type: 'scores',
+                status: 'failed',
+                api_provider: 'api-sports',
+                records_updated: 0,
+                error_message: errorMessage,
+                response_time_ms: responseTime,
+                started_at,
+            })
+
+            throw error
+        }
+    }
+
+    /**
+     * Fetch live scores (games currently in progress)
+     * Uses the /games endpoint with live parameter
+     */
+    async fetchLiveScores(leagueId: number = NFL_LEAGUE_ID): Promise<NFLGame[]> {
+        const startTime = Date.now()
+        const started_at = new Date().toISOString()
+
+        try {
+            const response = await this.request<NFLGame>('/games', {
+                league: leagueId,
+                live: 'all',
+            })
+            const responseTime = Date.now() - startTime
+
+            await this.logSync({
+                sync_type: 'scores',
+                status: 'success',
+                api_provider: 'api-sports',
+                records_updated: response.results,
+                response_time_ms: responseTime,
+                started_at,
+            })
+
+            return response.response
+        } catch (error) {
+            const responseTime = Date.now() - startTime
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+            await this.logSync({
+                sync_type: 'scores',
+                status: 'failed',
+                api_provider: 'api-sports',
+                records_updated: 0,
+                error_message: errorMessage,
+                response_time_ms: responseTime,
+                started_at,
+            })
+
+            throw error
+        }
     }
 }
 
