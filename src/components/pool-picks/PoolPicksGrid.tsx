@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { useGames } from '@/lib/hooks/useGames'
@@ -201,8 +202,19 @@ function GamePicksCard({ game }: { game: any }) {
 export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
   const currentSeason = season || parseInt(process.env.NEXT_PUBLIC_CURRENT_NFL_SEASON || new Date().getFullYear().toString())
   const { data: games, isLoading: gamesLoading } = useGames(weekNumber, currentSeason)
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
 
-  if (gamesLoading) {
+  // Set current time on client side to avoid hydration mismatch
+  // Also update every 30 seconds to catch games that just started
+  useEffect(() => {
+    setCurrentTime(new Date())
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (gamesLoading || !currentTime) {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Loading pool picks...</p>
@@ -220,9 +232,8 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
 
   // Filter to games that have started (either is_locked flag OR scheduled time has passed)
   // Sort by scheduled start time descending (most recent first)
-  const now = new Date()
   const startedGames = games
-    .filter(g => g.is_locked || new Date(g.scheduled_start_time) <= now)
+    .filter(g => g.is_locked || new Date(g.scheduled_start_time) <= currentTime)
     .sort((a, b) => {
       const aTime = new Date(a.scheduled_start_time).getTime()
       const bTime = new Date(b.scheduled_start_time).getTime()

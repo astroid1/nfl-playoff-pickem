@@ -61,6 +61,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
   const [totalPointsGuess, setTotalPointsGuess] = useState<string>(
     currentPick?.superbowl_total_points_guess?.toString() || ''
   )
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
 
   const isSuperBowl = game.playoff_round.name === 'Super Bowl'
 
@@ -70,9 +71,19 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
     setTotalPointsGuess(currentPick?.superbowl_total_points_guess?.toString() || '')
   }, [currentPick?.selected_team_id, currentPick?.superbowl_total_points_guess])
 
+  // Set current time on client side to avoid hydration mismatch
+  // Also update every 30 seconds to catch games that just started
+  useEffect(() => {
+    setCurrentTime(new Date())
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
   // Check if game has started based on scheduled time (not just API status or is_locked flag)
   const scheduledTime = new Date(game.scheduled_start_time)
-  const hasGameTimeStarted = scheduledTime <= new Date()
+  const hasGameTimeStarted = currentTime ? scheduledTime <= currentTime : false
 
   // Game is effectively locked if: is_locked flag is set OR scheduled time has passed
   const isLocked = game.is_locked || hasGameTimeStarted
