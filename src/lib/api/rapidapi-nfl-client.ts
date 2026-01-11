@@ -6,7 +6,7 @@
  * to ensure backwards compatibility with existing code.
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import type {
     NFLGame,
     NFLTeam,
@@ -48,7 +48,7 @@ export class RapidApiNFLClient {
     private baseUrl: string
     private apiKey: string
     private apiHost: string
-    private supabase: Awaited<ReturnType<typeof createClient>> | null = null
+    private supabase: ReturnType<typeof createServiceClient> | null = null
 
     constructor(apiKey?: string, baseUrl?: string, apiHost?: string) {
         this.apiKey = apiKey || RAPIDAPI_KEY || ''
@@ -59,12 +59,12 @@ export class RapidApiNFLClient {
     /**
      * Initialize Supabase client for logging (server-side only)
      */
-    private async initSupabase() {
+    private initSupabase() {
         if (!this.supabase) {
             try {
-                this.supabase = await createClient()
+                this.supabase = createServiceClient()
             } catch (error) {
-                console.warn('Supabase client not available (running outside Next.js context)')
+                console.warn('Supabase client not available:', error)
                 return null
             }
         }
@@ -76,7 +76,7 @@ export class RapidApiNFLClient {
      */
     private async logSync(entry: ApiSyncLogEntry) {
         try {
-            const supabase = await this.initSupabase()
+            const supabase = this.initSupabase()
             if (!supabase) {
                 return
             }
