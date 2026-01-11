@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
-import { mapGameStatus } from '@/lib/api/nfl-api'
 
 const RAPIDAPI_BASE_URL = process.env.RAPIDAPI_NFL_BASE_URL || 'https://nfl-api-data.p.rapidapi.com'
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY
@@ -118,13 +117,23 @@ export async function GET(request: NextRequest) {
                             const apiHome = comp.competitors.find((c: any) => c.homeAway === 'home')
                             const apiAway = comp.competitors.find((c: any) => c.homeAway === 'away')
 
-                            const newStatus = mapGameStatus(apiGame.status.type.shortDetail || apiGame.status.type.name)
+                            // Map RapidAPI status state to our status
+                            let newStatus: 'scheduled' | 'in_progress' | 'final' | 'postponed' | 'cancelled' = 'scheduled'
+                            const state = apiGame.status?.type?.state
+                            if (state === 'in') {
+                                newStatus = 'in_progress'
+                            } else if (state === 'post') {
+                                newStatus = 'final'
+                            } else if (state === 'pre') {
+                                newStatus = 'scheduled'
+                            }
                             const homeScore = parseInt(apiHome?.score) || null
                             const awayScore = parseInt(apiAway?.score) || null
                             const quarter = apiGame.status?.period || null
                             const gameClock = apiGame.status?.displayClock || null
 
                             results.push(`Updating ${awayAbbr}@${homeAbbr}...`)
+                            results.push(`  API state: ${state}`)
                             results.push(`  New status: ${newStatus}`)
                             results.push(`  New scores: ${awayScore}-${homeScore}`)
                             results.push(`  Quarter: ${quarter}, Clock: ${gameClock}`)
