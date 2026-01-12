@@ -47,6 +47,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <CurrentRankCard />
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Points</CardTitle>
@@ -86,8 +88,6 @@ export default async function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-
-        <CurrentRankCard />
       </div>
 
       {/* Live Scoreboard */}
