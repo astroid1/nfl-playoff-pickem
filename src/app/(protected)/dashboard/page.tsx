@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { LiveScoreboard } from '@/components/dashboard/LiveScoreboard'
+import { CurrentRankCard } from '@/components/dashboard/CurrentRankCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,87 +39,6 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .eq('season', currentSeason)
     .single() as any
-
-  // Get all profiles and stats to calculate rank (matching leaderboard logic exactly)
-  const { data: allProfiles } = await supabase
-    .from('profiles')
-    .select('id, username')
-    .order('username', { ascending: true })
-
-  const { data: allStats } = await supabase
-    .from('user_stats')
-    .select('user_id, total_points, total_correct_picks, tiebreaker_difference')
-    .eq('season', currentSeason)
-
-  // Calculate user's rank (accounting for ties) - matching leaderboard logic exactly
-  let userRank = 1
-  let totalPlayers = allProfiles?.length || 0
-
-  if (allProfiles) {
-    // Create stats map
-    const statsMap = new Map(allStats?.map(s => [s.user_id, s]) || [])
-
-    // Build standings for all users (same as leaderboard)
-    const standings = allProfiles.map(profile => {
-      const userStats = statsMap.get(profile.id)
-      return {
-        user_id: profile.id,
-        username: profile.username,
-        total_points: userStats?.total_points || 0,
-        total_correct_picks: userStats?.total_correct_picks || 0,
-        tiebreaker_difference: userStats?.tiebreaker_difference ?? null,
-      }
-    })
-
-    // Sort by points, then correct picks, then tiebreaker (matching leaderboard exactly)
-    standings.sort((a, b) => {
-      // First: sort by total points (higher is better)
-      if (b.total_points !== a.total_points) {
-        return b.total_points - a.total_points
-      }
-      // Second: sort by total correct picks (higher is better)
-      if (b.total_correct_picks !== a.total_correct_picks) {
-        return b.total_correct_picks - a.total_correct_picks
-      }
-      // Third: sort by tiebreaker difference (lower is better)
-      // Null values go to the end
-      if (a.tiebreaker_difference === null && b.tiebreaker_difference === null) {
-        // Both null - sort alphabetically by username for stable sort
-        return a.username.localeCompare(b.username)
-      }
-      if (a.tiebreaker_difference === null) {
-        return 1
-      }
-      if (b.tiebreaker_difference === null) {
-        return -1
-      }
-      if (a.tiebreaker_difference !== b.tiebreaker_difference) {
-        return a.tiebreaker_difference - b.tiebreaker_difference
-      }
-      // Same tiebreaker - sort alphabetically for stable sort
-      return a.username.localeCompare(b.username)
-    })
-
-    // Calculate ranks with proper tie handling (matching leaderboard exactly)
-    let currentRank = 1
-    for (let i = 0; i < standings.length; i++) {
-      if (i > 0) {
-        const prev = standings[i - 1]
-        const curr = standings[i]
-        const isTied =
-          curr.total_points === prev.total_points &&
-          curr.total_correct_picks === prev.total_correct_picks &&
-          curr.tiebreaker_difference === prev.tiebreaker_difference
-        if (!isTied) {
-          currentRank = i + 1
-        }
-      }
-      if (standings[i].user_id === user.id) {
-        userRank = currentRank
-        break
-      }
-    }
-  }
 
   return (
     <div className="space-y-8">
@@ -167,17 +87,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Rank</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">#{userRank}</div>
-            <p className="text-xs text-muted-foreground">
-              Out of {totalPlayers} player{totalPlayers !== 1 ? 's' : ''}
-            </p>
-          </CardContent>
-        </Card>
+        <CurrentRankCard />
       </div>
 
       {/* Live Scoreboard */}
