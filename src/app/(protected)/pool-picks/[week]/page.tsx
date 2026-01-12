@@ -4,7 +4,6 @@ import { use } from 'react'
 import { PoolPicksGrid } from '@/components/pool-picks/PoolPicksGrid'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface PageProps {
   params: Promise<{
@@ -25,48 +24,9 @@ export default function PoolPicksWeekPage({ params }: PageProps) {
       <div>
         <h1 className="text-3xl font-bold">Pool-wide Picks - Week {weekNumber}</h1>
         <p className="text-muted-foreground">
-          See everyone's picks for games that have started
+          Picks are only visible after games start.
         </p>
       </div>
-
-      {/* Info Card */}
-      <Card className="bg-muted/50">
-        <CardHeader>
-          <CardTitle className="text-base">How it works</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              <span>Picks are only visible after the game starts (locked status)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              <span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-600 text-white">
-                  Team ✓
-                </span> = Correct pick (game final)
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              <span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-destructive text-white">
-                  Team ✗
-                </span> = Incorrect pick (game final)
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              <span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-secondary">
-                  Team
-                </span> = Pick pending (game in progress)
-              </span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
 
       {/* Pool Picks Grid */}
       <PoolPicksGrid weekNumber={weekNumber} season={currentSeason} />

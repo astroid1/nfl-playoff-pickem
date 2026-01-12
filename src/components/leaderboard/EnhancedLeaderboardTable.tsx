@@ -89,13 +89,17 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
           </TableHeader>
           <TableBody>
             {(standings as any[]).map((stat: any, index) => {
-              const rank = index + 1
+              const rank = stat.rank // Use calculated rank that accounts for ties
               const totalGames = stat.total_correct_picks + stat.total_incorrect_picks
               const winRate = totalGames > 0
                 ? Math.round((stat.total_correct_picks / totalGames) * 100)
                 : 0
               const isCurrentUser = user?.id === stat.user_id
               const medal = getMedalEmoji(rank)
+              // Check if this player is tied with someone else
+              const prevStat = index > 0 ? (standings as any[])[index - 1] : null
+              const nextStat = index < (standings as any[]).length - 1 ? (standings as any[])[index + 1] : null
+              const isTied = (prevStat && prevStat.rank === rank) || (nextStat && nextStat.rank === rank)
 
               return (
                 <TableRow
@@ -106,6 +110,16 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
                     <div className="flex items-center gap-1">
                       {medal && <span className="text-lg">{medal}</span>}
                       {!medal && <span className="font-medium">#{rank}</span>}
+                      {isTied && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs text-muted-foreground ml-0.5 cursor-help">T</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Tied with another player</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="py-2 md:py-4">
@@ -143,10 +157,15 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
           </TableBody>
         </Table>
       </div>
-      {/* Mobile info note */}
-      <p className="text-xs text-muted-foreground mt-2 sm:hidden">
-        Rotate device for more columns.
-      </p>
+      {/* Info notes */}
+      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 mt-2">
+        <p className="text-xs text-muted-foreground sm:hidden">
+          Rotate device for more columns.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          T = Tied (same points, correct picks, and tiebreaker)
+        </p>
+      </div>
     </TooltipProvider>
   )
 }

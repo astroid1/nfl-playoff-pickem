@@ -76,7 +76,30 @@ export function useEnhancedLeaderboard(season?: number) {
         return a.tiebreaker_difference - b.tiebreaker_difference
       })
 
-      return standings
+      // Calculate proper ranks with ties
+      // Users are tied if they have same points, correct picks, and tiebreaker
+      let currentRank = 1
+      const rankedStandings = standings.map((standing, index) => {
+        if (index > 0) {
+          const prev = standings[index - 1]
+          const isTied =
+            standing.total_points === prev.total_points &&
+            standing.total_correct_picks === prev.total_correct_picks &&
+            standing.tiebreaker_difference === prev.tiebreaker_difference
+
+          if (!isTied) {
+            // Not tied, so rank is position + 1 (accounts for all tied players above)
+            currentRank = index + 1
+          }
+          // If tied, keep the same rank as previous
+        }
+        return {
+          ...standing,
+          rank: currentRank,
+        }
+      })
+
+      return rankedStandings
     },
     refetchInterval: 60000, // Refetch every minute
   })
