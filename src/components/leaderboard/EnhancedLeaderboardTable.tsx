@@ -145,7 +145,7 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
       </div>
       {/* Mobile info note */}
       <p className="text-xs text-muted-foreground mt-2 sm:hidden">
-        Tap a row to see full details. Rotate device for more columns.
+        Rotate device for more columns.
       </p>
     </TooltipProvider>
   )
