@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { LiveScoreboard } from '@/components/dashboard/LiveScoreboard'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: "Alex's Pigskin Picks",
   description: "Alex's Pigskin Picks",
