@@ -100,12 +100,19 @@ export async function GET(request: NextRequest) {
 
         console.log(`Found ${activeGames.length} active games to sync`)
 
-        // Get today's date
+        // Get today's date and yesterday (to handle timezone differences - APIs use US Eastern)
         const today = new Date()
-        const dateStr = today.toISOString().split('T')[0].replace(/-/g, '') // YYYYMMDD for RapidAPI
-        const dateStrDash = today.toISOString().split('T')[0] // YYYY-MM-DD for API-Sports
+        const yesterday = new Date(today)
+        yesterday.setDate(yesterday.getDate() - 1)
 
-        // Fetch data from both APIs
+        const todayStr = today.toISOString().split('T')[0].replace(/-/g, '') // YYYYMMDD for RapidAPI
+        const todayStrDash = today.toISOString().split('T')[0] // YYYY-MM-DD for API-Sports
+        const yesterdayStr = yesterday.toISOString().split('T')[0].replace(/-/g, '')
+        const yesterdayStrDash = yesterday.toISOString().split('T')[0]
+
+        console.log(`Fetching games for today (${todayStrDash}) and yesterday (${yesterdayStrDash}) to handle timezone differences`)
+
+        // Fetch data from both APIs for both days
         const rapidApiClient = getRapidApiClient()
         const apiSportsClient = getApiSportsClient()
 
@@ -114,27 +121,27 @@ export async function GET(request: NextRequest) {
         let rapidApiError: Error | null = null
         let apiSportsError: Error | null = null
 
-        // Try RapidAPI (primary)
+        // Try RapidAPI (primary) - fetch both days and combine
         try {
-            rapidApiGames = await rapidApiClient.fetchScoreboardByDay(dateStr)
-            console.log(`RapidAPI returned ${rapidApiGames.length} games`)
-            // Log team codes for debugging
-            rapidApiGames.forEach((g: any) => {
-                console.log(`RapidAPI game: ${g.teams?.away?.code}@${g.teams?.home?.code}`)
-            })
+            const [todayGames, yesterdayGames] = await Promise.all([
+                rapidApiClient.fetchScoreboardByDay(todayStr),
+                rapidApiClient.fetchScoreboardByDay(yesterdayStr),
+            ])
+            rapidApiGames = [...todayGames, ...yesterdayGames]
+            console.log(`RapidAPI returned ${todayGames.length} games for today, ${yesterdayGames.length} for yesterday (${rapidApiGames.length} total)`)
         } catch (error) {
             rapidApiError = error instanceof Error ? error : new Error('Unknown RapidAPI error')
             console.error('RapidAPI fetch failed:', rapidApiError.message)
         }
 
-        // Try API-Sports (secondary/fallback)
+        // Try API-Sports (secondary/fallback) - fetch both days and combine
         try {
-            apiSportsGames = await apiSportsClient.fetchGamesByDate(dateStrDash)
-            console.log(`API-Sports returned ${apiSportsGames.length} games`)
-            // Log team codes for debugging
-            apiSportsGames.forEach((g: any) => {
-                console.log(`API-Sports game: ${g.teams?.away?.code}@${g.teams?.home?.code}`)
-            })
+            const [todayGames, yesterdayGames] = await Promise.all([
+                apiSportsClient.fetchGamesByDate(todayStrDash),
+                apiSportsClient.fetchGamesByDate(yesterdayStrDash),
+            ])
+            apiSportsGames = [...todayGames, ...yesterdayGames]
+            console.log(`API-Sports returned ${todayGames.length} games for today, ${yesterdayGames.length} for yesterday (${apiSportsGames.length} total)`)
         } catch (error) {
             apiSportsError = error instanceof Error ? error : new Error('Unknown API-Sports error')
             console.error('API-Sports fetch failed:', apiSportsError.message)
@@ -181,13 +188,14 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
-                // If game is on a different day, fetch that day specifically
+                // If game is on a different day (not today or yesterday), fetch that day specifically
                 if (!gameData) {
                     const gameDate = new Date(dbGame.scheduled_start_time)
                     const gameDateStr = gameDate.toISOString().split('T')[0].replace(/-/g, '')
                     const gameDateStrDash = gameDate.toISOString().split('T')[0]
 
-                    if (gameDateStr !== dateStr) {
+                    // Only fetch if it's not already in our today/yesterday data
+                    if (gameDateStr !== todayStr && gameDateStr !== yesterdayStr) {
                         console.log(`Game ${awayAbbr}@${homeAbbr} is on ${gameDateStrDash}, fetching that day...`)
 
                         // Try RapidAPI for that day
@@ -210,44 +218,6 @@ export async function GET(request: NextRequest) {
                             } catch (e) {
                                 console.log('API-Sports day fetch failed:', e)
                             }
-                        }
-                    }
-                }
-
-                // If still not found, try the previous day (API might use US timezone dates)
-                if (!gameData) {
-                    const yesterday = new Date(today)
-                    yesterday.setDate(yesterday.getDate() - 1)
-                    const yesterdayStr = yesterday.toISOString().split('T')[0].replace(/-/g, '')
-                    const yesterdayStrDash = yesterday.toISOString().split('T')[0]
-
-                    console.log(`Game ${awayAbbr}@${homeAbbr} not found, trying previous day ${yesterdayStrDash}...`)
-
-                    // Try RapidAPI for yesterday
-                    if (!rapidApiError) {
-                        try {
-                            const dayGames = await rapidApiClient.fetchScoreboardByDay(yesterdayStr)
-                            gameData = findRapidApiGame(dayGames, homeAbbr, awayAbbr)
-                            if (gameData) {
-                                apiUsage.rapidapi++
-                                console.log(`Found game on ${yesterdayStrDash} via RapidAPI`)
-                            }
-                        } catch (e) {
-                            console.log('RapidAPI yesterday fetch failed:', e)
-                        }
-                    }
-
-                    // Fallback to API-Sports for yesterday
-                    if (!gameData && !apiSportsError) {
-                        try {
-                            const dayGames = await apiSportsClient.fetchGamesByDate(yesterdayStrDash)
-                            gameData = findApiSportsGame(dayGames, homeAbbr, awayAbbr)
-                            if (gameData) {
-                                apiUsage.apiSports++
-                                console.log(`Found game on ${yesterdayStrDash} via API-Sports`)
-                            }
-                        } catch (e) {
-                            console.log('API-Sports yesterday fetch failed:', e)
                         }
                     }
                 }
