@@ -214,6 +214,44 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
+                // If still not found, try the previous day (API might use US timezone dates)
+                if (!gameData) {
+                    const yesterday = new Date(today)
+                    yesterday.setDate(yesterday.getDate() - 1)
+                    const yesterdayStr = yesterday.toISOString().split('T')[0].replace(/-/g, '')
+                    const yesterdayStrDash = yesterday.toISOString().split('T')[0]
+
+                    console.log(`Game ${awayAbbr}@${homeAbbr} not found, trying previous day ${yesterdayStrDash}...`)
+
+                    // Try RapidAPI for yesterday
+                    if (!rapidApiError) {
+                        try {
+                            const dayGames = await rapidApiClient.fetchScoreboardByDay(yesterdayStr)
+                            gameData = findRapidApiGame(dayGames, homeAbbr, awayAbbr)
+                            if (gameData) {
+                                apiUsage.rapidapi++
+                                console.log(`Found game on ${yesterdayStrDash} via RapidAPI`)
+                            }
+                        } catch (e) {
+                            console.log('RapidAPI yesterday fetch failed:', e)
+                        }
+                    }
+
+                    // Fallback to API-Sports for yesterday
+                    if (!gameData && !apiSportsError) {
+                        try {
+                            const dayGames = await apiSportsClient.fetchGamesByDate(yesterdayStrDash)
+                            gameData = findApiSportsGame(dayGames, homeAbbr, awayAbbr)
+                            if (gameData) {
+                                apiUsage.apiSports++
+                                console.log(`Found game on ${yesterdayStrDash} via API-Sports`)
+                            }
+                        } catch (e) {
+                            console.log('API-Sports yesterday fetch failed:', e)
+                        }
+                    }
+                }
+
                 if (!gameData) {
                     console.log(`No API match for ${awayAbbr}@${homeAbbr}`)
                     continue
