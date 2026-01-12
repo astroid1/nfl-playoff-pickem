@@ -37,17 +37,18 @@ export default async function DashboardPage() {
     .eq('season', currentSeason)
     .single() as any
 
-  // Get all profiles and stats to calculate rank (matching leaderboard logic)
+  // Get all profiles and stats to calculate rank (matching leaderboard logic exactly)
   const { data: allProfiles } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, username')
+    .order('username', { ascending: true })
 
   const { data: allStats } = await supabase
     .from('user_stats')
     .select('user_id, total_points, total_correct_picks, tiebreaker_difference')
     .eq('season', currentSeason)
 
-  // Calculate user's rank (accounting for ties) - matching leaderboard logic
+  // Calculate user's rank (accounting for ties) - matching leaderboard logic exactly
   let userRank = 1
   let totalPlayers = allProfiles?.length || 0
 
@@ -60,23 +61,38 @@ export default async function DashboardPage() {
       const userStats = statsMap.get(profile.id)
       return {
         user_id: profile.id,
+        username: profile.username,
         total_points: userStats?.total_points || 0,
         total_correct_picks: userStats?.total_correct_picks || 0,
         tiebreaker_difference: userStats?.tiebreaker_difference ?? null,
       }
     })
 
-    // Sort by points, then correct picks, then tiebreaker (matching leaderboard)
+    // Sort by points, then correct picks, then tiebreaker (matching leaderboard exactly)
     standings.sort((a, b) => {
-      if (b.total_points !== a.total_points) return b.total_points - a.total_points
-      if (b.total_correct_picks !== a.total_correct_picks) return b.total_correct_picks - a.total_correct_picks
-      if (a.tiebreaker_difference === null && b.tiebreaker_difference === null) return 0
-      if (a.tiebreaker_difference === null) return 1
-      if (b.tiebreaker_difference === null) return -1
+      // First: sort by total points (higher is better)
+      if (b.total_points !== a.total_points) {
+        return b.total_points - a.total_points
+      }
+      // Second: sort by total correct picks (higher is better)
+      if (b.total_correct_picks !== a.total_correct_picks) {
+        return b.total_correct_picks - a.total_correct_picks
+      }
+      // Third: sort by tiebreaker difference (lower is better)
+      // Null values go to the end
+      if (a.tiebreaker_difference === null && b.tiebreaker_difference === null) {
+        return 0
+      }
+      if (a.tiebreaker_difference === null) {
+        return 1
+      }
+      if (b.tiebreaker_difference === null) {
+        return -1
+      }
       return a.tiebreaker_difference - b.tiebreaker_difference
     })
 
-    // Find user's rank with proper tie handling
+    // Calculate ranks with proper tie handling (matching leaderboard exactly)
     let currentRank = 1
     for (let i = 0; i < standings.length; i++) {
       if (i > 0) {
