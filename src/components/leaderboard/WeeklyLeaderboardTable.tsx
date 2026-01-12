@@ -59,8 +59,8 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
           </TableRow>
         </TableHeader>
         <TableBody>
-          {(standings as any[]).map((stat: any, index) => {
-            const rank = index + 1
+          {(standings as any[]).map((stat: any) => {
+            const rank = stat.rank // Use calculated rank that accounts for ties
             const totalCompleted = stat.total_correct + stat.total_incorrect
             const winRate = totalCompleted > 0
               ? Math.round((stat.total_correct / totalCompleted) * 100)
