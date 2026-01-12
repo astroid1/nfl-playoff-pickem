@@ -37,19 +37,37 @@ export default async function DashboardPage() {
     .eq('season', currentSeason)
     .single() as any
 
-  // Get all user stats to calculate rank
+  // Get all profiles and stats to calculate rank (matching leaderboard logic)
+  const { data: allProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+
   const { data: allStats } = await supabase
     .from('user_stats')
     .select('user_id, total_points, total_correct_picks, tiebreaker_difference')
     .eq('season', currentSeason)
-    .order('total_points', { ascending: false })
 
-  // Calculate user's rank (accounting for ties)
+  // Calculate user's rank (accounting for ties) - matching leaderboard logic
   let userRank = 1
-  let totalPlayers = allStats?.length || 0
-  if (allStats && stats) {
-    // Sort by points, then correct picks, then tiebreaker
-    const sorted = [...allStats].sort((a, b) => {
+  let totalPlayers = allProfiles?.length || 0
+
+  if (allProfiles) {
+    // Create stats map
+    const statsMap = new Map(allStats?.map(s => [s.user_id, s]) || [])
+
+    // Build standings for all users (same as leaderboard)
+    const standings = allProfiles.map(profile => {
+      const userStats = statsMap.get(profile.id)
+      return {
+        user_id: profile.id,
+        total_points: userStats?.total_points || 0,
+        total_correct_picks: userStats?.total_correct_picks || 0,
+        tiebreaker_difference: userStats?.tiebreaker_difference ?? null,
+      }
+    })
+
+    // Sort by points, then correct picks, then tiebreaker (matching leaderboard)
+    standings.sort((a, b) => {
       if (b.total_points !== a.total_points) return b.total_points - a.total_points
       if (b.total_correct_picks !== a.total_correct_picks) return b.total_correct_picks - a.total_correct_picks
       if (a.tiebreaker_difference === null && b.tiebreaker_difference === null) return 0
@@ -60,10 +78,10 @@ export default async function DashboardPage() {
 
     // Find user's rank with proper tie handling
     let currentRank = 1
-    for (let i = 0; i < sorted.length; i++) {
+    for (let i = 0; i < standings.length; i++) {
       if (i > 0) {
-        const prev = sorted[i - 1]
-        const curr = sorted[i]
+        const prev = standings[i - 1]
+        const curr = standings[i]
         const isTied =
           curr.total_points === prev.total_points &&
           curr.total_correct_picks === prev.total_correct_picks &&
@@ -72,7 +90,7 @@ export default async function DashboardPage() {
           currentRank = i + 1
         }
       }
-      if (sorted[i].user_id === user.id) {
+      if (standings[i].user_id === user.id) {
         userRank = currentRank
         break
       }
