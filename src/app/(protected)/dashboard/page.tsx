@@ -54,6 +54,12 @@ export default async function DashboardPage() {
   let userRank = 1
   let totalPlayers = allProfiles?.length || 0
 
+  // Debug logging
+  console.log('[Dashboard] currentSeason:', currentSeason)
+  console.log('[Dashboard] allStats count:', allStats?.length)
+  console.log('[Dashboard] allStats:', JSON.stringify(allStats?.slice(0, 5)))
+  console.log('[Dashboard] user.id:', user.id)
+
   if (allProfiles) {
     // Create stats map
     const statsMap = new Map(allStats?.map(s => [s.user_id, s]) || [])
@@ -69,6 +75,9 @@ export default async function DashboardPage() {
         tiebreaker_difference: userStats?.tiebreaker_difference ?? null,
       }
     })
+
+    // Debug: log top standings before sort
+    console.log('[Dashboard] standings before sort (first 5):', JSON.stringify(standings.slice(0, 5)))
 
     // Sort by points, then correct picks, then tiebreaker (matching leaderboard exactly)
     standings.sort((a, b) => {
@@ -99,6 +108,13 @@ export default async function DashboardPage() {
       return a.username.localeCompare(b.username)
     })
 
+    // Debug: log top standings after sort
+    console.log('[Dashboard] standings after sort (first 5):', JSON.stringify(standings.slice(0, 5).map(s => ({
+      username: s.username,
+      points: s.total_points,
+      correct: s.total_correct_picks
+    }))))
+
     // Calculate ranks with proper tie handling (matching leaderboard exactly)
     let currentRank = 1
     for (let i = 0; i < standings.length; i++) {
@@ -115,9 +131,11 @@ export default async function DashboardPage() {
       }
       if (standings[i].user_id === user.id) {
         userRank = currentRank
+        console.log('[Dashboard] Found user at index', i, 'with rank', currentRank)
         break
       }
     }
+    console.log('[Dashboard] Final userRank:', userRank)
   }
 
   return (
