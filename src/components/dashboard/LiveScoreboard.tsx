@@ -9,11 +9,17 @@ interface LiveScoreboardProps {
   weekNumber?: number
 }
 
-// Format quarter display
-function formatQuarter(quarter: number | null | undefined): string {
+// Format game time display (quarter + clock)
+function formatGameTime(quarter: number | null | undefined, gameClock: string | null | undefined): string {
   if (!quarter) return ''
-  if (quarter <= 4) return `Q${quarter}`
-  return 'OT'
+
+  // Check for halftime (Q2 with 0:00 on clock)
+  if (quarter === 2 && gameClock === '0:00') {
+    return 'Halftime'
+  }
+
+  const quarterStr = quarter <= 4 ? `Q${quarter}` : 'OT'
+  return gameClock ? `${quarterStr} ${gameClock}` : quarterStr
 }
 
 export function LiveScoreboard({ showAllGames = false, weekNumber }: LiveScoreboardProps) {
@@ -65,9 +71,7 @@ export function LiveScoreboard({ showAllGames = false, weekNumber }: LiveScorebo
           <div className="flex items-center gap-2">
             {isLive && (
               <Badge variant="default" className="bg-green-600 text-xs animate-pulse">
-                {game.quarter && game.game_clock
-                  ? `${formatQuarter(game.quarter)} ${game.game_clock}`
-                  : 'Live'}
+                {formatGameTime(game.quarter, game.game_clock) || 'Live'}
               </Badge>
             )}
             {isFinal && (

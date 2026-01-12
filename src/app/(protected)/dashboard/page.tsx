@@ -37,6 +37,48 @@ export default async function DashboardPage() {
     .eq('season', currentSeason)
     .single() as any
 
+  // Get all user stats to calculate rank
+  const { data: allStats } = await supabase
+    .from('user_stats')
+    .select('user_id, total_points, total_correct_picks, tiebreaker_difference')
+    .eq('season', currentSeason)
+    .order('total_points', { ascending: false })
+
+  // Calculate user's rank (accounting for ties)
+  let userRank = 1
+  let totalPlayers = allStats?.length || 0
+  if (allStats && stats) {
+    // Sort by points, then correct picks, then tiebreaker
+    const sorted = [...allStats].sort((a, b) => {
+      if (b.total_points !== a.total_points) return b.total_points - a.total_points
+      if (b.total_correct_picks !== a.total_correct_picks) return b.total_correct_picks - a.total_correct_picks
+      if (a.tiebreaker_difference === null && b.tiebreaker_difference === null) return 0
+      if (a.tiebreaker_difference === null) return 1
+      if (b.tiebreaker_difference === null) return -1
+      return a.tiebreaker_difference - b.tiebreaker_difference
+    })
+
+    // Find user's rank with proper tie handling
+    let currentRank = 1
+    for (let i = 0; i < sorted.length; i++) {
+      if (i > 0) {
+        const prev = sorted[i - 1]
+        const curr = sorted[i]
+        const isTied =
+          curr.total_points === prev.total_points &&
+          curr.total_correct_picks === prev.total_correct_picks &&
+          curr.tiebreaker_difference === prev.tiebreaker_difference
+        if (!isTied) {
+          currentRank = i + 1
+        }
+      }
+      if (sorted[i].user_id === user.id) {
+        userRank = currentRank
+        break
+      }
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -86,12 +128,12 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Picks</CardTitle>
+            <CardTitle className="text-sm font-medium">Current Rank</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_pending_picks || 0}</div>
+            <div className="text-2xl font-bold">#{userRank}</div>
             <p className="text-xs text-muted-foreground">
-              Games in progress
+              Out of {totalPlayers} player{totalPlayers !== 1 ? 's' : ''}
             </p>
           </CardContent>
         </Card>

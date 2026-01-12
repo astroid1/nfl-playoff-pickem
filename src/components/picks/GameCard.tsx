@@ -155,11 +155,17 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
     }
   }
 
-  // Format quarter display
-  const formatQuarter = (quarter: number | null | undefined): string => {
+  // Format game time display (quarter + clock)
+  const formatGameTimeDisplay = (quarter: number | null | undefined, gameClock: string | null | undefined): string => {
     if (!quarter) return ''
-    if (quarter <= 4) return `Q${quarter}`
-    return 'OT'
+
+    // Check for halftime (Q2 with 0:00 on clock)
+    if (quarter === 2 && gameClock === '0:00') {
+      return 'Halftime'
+    }
+
+    const quarterStr = quarter <= 4 ? `Q${quarter}` : 'OT'
+    return gameClock ? `${quarterStr} ${gameClock}` : quarterStr
   }
 
   const getStatusBadge = () => {
@@ -167,9 +173,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
       return <Badge variant="secondary">Final</Badge>
     }
     if (isInProgress) {
-      const quarterStr = game.quarter ? formatQuarter(game.quarter) : ''
-      const clockStr = game.game_clock || ''
-      const displayText = quarterStr && clockStr ? `${quarterStr} ${clockStr}` : 'Live'
+      const displayText = formatGameTimeDisplay(game.quarter, game.game_clock) || 'Live'
       return <Badge variant="default" className="bg-green-600 animate-pulse">{displayText}</Badge>
     }
     if (isLocked) {

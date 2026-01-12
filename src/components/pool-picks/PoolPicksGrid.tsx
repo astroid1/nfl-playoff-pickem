@@ -12,11 +12,17 @@ interface PoolPicksGridProps {
   season?: number
 }
 
-// Format quarter display
-function formatQuarter(quarter: number | null | undefined): string {
+// Format game time display (quarter + clock)
+function formatGameTime(quarter: number | null | undefined, gameClock: string | null | undefined): string {
   if (!quarter) return ''
-  if (quarter <= 4) return `Q${quarter}`
-  return 'OT'
+
+  // Check for halftime (Q2 with 0:00 on clock)
+  if (quarter === 2 && gameClock === '0:00') {
+    return 'Halftime'
+  }
+
+  const quarterStr = quarter <= 4 ? `Q${quarter}` : 'OT'
+  return gameClock ? `${quarterStr} ${gameClock}` : quarterStr
 }
 
 // Component to display picks for a single game
@@ -58,9 +64,7 @@ function GamePicksCard({ game }: { game: any }) {
             )}
             {game.status === 'in_progress' && (
               <Badge variant="default" className="bg-green-600 animate-pulse">
-                {game.quarter && game.game_clock
-                  ? `${formatQuarter(game.quarter)} ${game.game_clock}`
-                  : 'Live'}
+                {formatGameTime(game.quarter, game.game_clock) || 'Live'}
               </Badge>
             )}
             <span className="text-sm text-muted-foreground">
@@ -86,9 +90,7 @@ function GamePicksCard({ game }: { game: any }) {
             <div className="flex flex-col items-center">
               {game.status === 'in_progress' && (
                 <span className="text-xs text-green-600 font-medium animate-pulse">
-                  {game.quarter && game.game_clock
-                    ? `${formatQuarter(game.quarter)} ${game.game_clock}`
-                    : 'LIVE'}
+                  {formatGameTime(game.quarter, game.game_clock) || 'LIVE'}
                 </span>
               )}
               <span className="text-muted-foreground text-lg">-</span>
