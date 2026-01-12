@@ -26,6 +26,29 @@ interface GameData {
     source: 'rapidapi' | 'api-sports'
 }
 
+// Map API abbreviations to database abbreviations
+// APIs sometimes use different codes than our database
+const TEAM_ABBR_MAP: Record<string, string> = {
+    // Los Angeles teams
+    'LA': 'LAR',      // Rams
+    'LAR': 'LAR',
+    'LAC': 'LAC',     // Chargers
+    // New York teams
+    'NYG': 'NYG',
+    'NYJ': 'NYJ',
+    // Jacksonville sometimes listed as JAX
+    'JAX': 'JAC',
+    'JAC': 'JAC',
+    // Washington sometimes listed differently
+    'WAS': 'WAS',
+    'WSH': 'WAS',
+}
+
+function normalizeTeamAbbr(apiAbbr: string | undefined): string {
+    if (!apiAbbr) return ''
+    return TEAM_ABBR_MAP[apiAbbr] || apiAbbr
+}
+
 export async function GET(request: NextRequest) {
     console.log('sync-scores cron started at', new Date().toISOString())
 
@@ -95,6 +118,10 @@ export async function GET(request: NextRequest) {
         try {
             rapidApiGames = await rapidApiClient.fetchScoreboardByDay(dateStr)
             console.log(`RapidAPI returned ${rapidApiGames.length} games`)
+            // Log team codes for debugging
+            rapidApiGames.forEach((g: any) => {
+                console.log(`RapidAPI game: ${g.teams?.away?.code}@${g.teams?.home?.code}`)
+            })
         } catch (error) {
             rapidApiError = error instanceof Error ? error : new Error('Unknown RapidAPI error')
             console.error('RapidAPI fetch failed:', rapidApiError.message)
@@ -104,6 +131,10 @@ export async function GET(request: NextRequest) {
         try {
             apiSportsGames = await apiSportsClient.fetchGamesByDate(dateStrDash)
             console.log(`API-Sports returned ${apiSportsGames.length} games`)
+            // Log team codes for debugging
+            apiSportsGames.forEach((g: any) => {
+                console.log(`API-Sports game: ${g.teams?.away?.code}@${g.teams?.home?.code}`)
+            })
         } catch (error) {
             apiSportsError = error instanceof Error ? error : new Error('Unknown API-Sports error')
             console.error('API-Sports fetch failed:', apiSportsError.message)
@@ -245,9 +276,12 @@ export async function GET(request: NextRequest) {
  */
 function findRapidApiGame(games: NFLGame[], homeAbbr: string, awayAbbr: string): GameData | null {
     // RapidAPI games have teams.home.code and teams.away.code
-    const apiGame = games.find((g: any) =>
-        g.teams?.home?.code === homeAbbr && g.teams?.away?.code === awayAbbr
-    )
+    // Normalize API abbreviations to match database
+    const apiGame = games.find((g: any) => {
+        const apiHomeAbbr = normalizeTeamAbbr(g.teams?.home?.code)
+        const apiAwayAbbr = normalizeTeamAbbr(g.teams?.away?.code)
+        return apiHomeAbbr === homeAbbr && apiAwayAbbr === awayAbbr
+    })
 
     if (!apiGame) return null
 
@@ -276,9 +310,12 @@ function findRapidApiGame(games: NFLGame[], homeAbbr: string, awayAbbr: string):
  */
 function findApiSportsGame(games: NFLGame[], homeAbbr: string, awayAbbr: string): GameData | null {
     // API-Sports games have teams.home.code and teams.away.code (same interface)
-    const apiGame = games.find(g =>
-        g.teams?.home?.code === homeAbbr && g.teams?.away?.code === awayAbbr
-    )
+    // Normalize API abbreviations to match database
+    const apiGame = games.find(g => {
+        const apiHomeAbbr = normalizeTeamAbbr(g.teams?.home?.code)
+        const apiAwayAbbr = normalizeTeamAbbr(g.teams?.away?.code)
+        return apiHomeAbbr === homeAbbr && apiAwayAbbr === awayAbbr
+    })
 
     if (!apiGame) return null
 
