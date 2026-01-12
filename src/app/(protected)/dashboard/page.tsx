@@ -26,8 +26,8 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single() as any
 
-  // Get current season
-  const currentSeason = parseInt(process.env.CURRENT_NFL_SEASON || '2025')
+  // Get current season (use NEXT_PUBLIC_ version to match client components)
+  const currentSeason = parseInt(process.env.NEXT_PUBLIC_CURRENT_NFL_SEASON || '2025')
 
   // Get user stats for current season
   const { data: stats } = await supabase
@@ -81,7 +81,8 @@ export default async function DashboardPage() {
       // Third: sort by tiebreaker difference (lower is better)
       // Null values go to the end
       if (a.tiebreaker_difference === null && b.tiebreaker_difference === null) {
-        return 0
+        // Both null - sort alphabetically by username for stable sort
+        return a.username.localeCompare(b.username)
       }
       if (a.tiebreaker_difference === null) {
         return 1
@@ -89,7 +90,11 @@ export default async function DashboardPage() {
       if (b.tiebreaker_difference === null) {
         return -1
       }
-      return a.tiebreaker_difference - b.tiebreaker_difference
+      if (a.tiebreaker_difference !== b.tiebreaker_difference) {
+        return a.tiebreaker_difference - b.tiebreaker_difference
+      }
+      // Same tiebreaker - sort alphabetically for stable sort
+      return a.username.localeCompare(b.username)
     })
 
     // Calculate ranks with proper tie handling (matching leaderboard exactly)

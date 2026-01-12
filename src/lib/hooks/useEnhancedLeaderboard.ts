@@ -65,7 +65,8 @@ export function useEnhancedLeaderboard(season?: number) {
         // Third: sort by tiebreaker difference (lower is better)
         // Null values go to the end
         if (a.tiebreaker_difference === null && b.tiebreaker_difference === null) {
-          return 0
+          // Both null - sort alphabetically by username for stable sort
+          return a.profile.username.localeCompare(b.profile.username)
         }
         if (a.tiebreaker_difference === null) {
           return 1
@@ -73,7 +74,11 @@ export function useEnhancedLeaderboard(season?: number) {
         if (b.tiebreaker_difference === null) {
           return -1
         }
-        return a.tiebreaker_difference - b.tiebreaker_difference
+        if (a.tiebreaker_difference !== b.tiebreaker_difference) {
+          return a.tiebreaker_difference - b.tiebreaker_difference
+        }
+        // Same tiebreaker - sort alphabetically for stable sort
+        return a.profile.username.localeCompare(b.profile.username)
       })
 
       // Calculate proper ranks with ties
