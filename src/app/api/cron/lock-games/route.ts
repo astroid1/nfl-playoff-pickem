@@ -89,9 +89,20 @@ export async function GET(request: NextRequest) {
                         }
                     })
 
-                    const { error: insertError } = await supabase
+                    // Try to insert with is_auto_pick column
+                    let { error: insertError } = await supabase
                         .from('picks')
                         .insert(autoPicksToInsert)
+
+                    // If is_auto_pick column doesn't exist, try without it
+                    if (insertError && insertError.message.includes('is_auto_pick')) {
+                        console.log(`Column is_auto_pick not found, inserting without it for game ${game.api_game_id}`)
+                        const picksWithoutAutoFlag = autoPicksToInsert.map(({ is_auto_pick, ...rest }) => rest)
+                        const result = await supabase
+                            .from('picks')
+                            .insert(picksWithoutAutoFlag)
+                        insertError = result.error
+                    }
 
                     if (insertError) {
                         console.error(`Error creating auto-picks for game ${game.id}:`, insertError)
