@@ -78,42 +78,11 @@ export function PasswordGate() {
         </div>
 
         {/* Tabs for New Users vs Existing Users */}
-        <Tabs defaultValue="new" className="w-full">
+        <Tabs defaultValue="existing" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="new">New User</TabsTrigger>
             <TabsTrigger value="existing">Sign In</TabsTrigger>
+            <TabsTrigger value="new">New User</TabsTrigger>
           </TabsList>
-
-          {/* New User - Password Gate */}
-          <TabsContent value="new">
-            <Card>
-              <CardHeader>
-                <CardTitle>Enter Access Code</CardTitle>
-              </CardHeader>
-              <form onSubmit={handleGateSubmit}>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="gate-password">Access Code</Label>
-                    <Input
-                      id="gate-password"
-                      type="password"
-                      placeholder="Enter access code"
-                      value={gatePassword}
-                      onChange={(e) => setGatePassword(e.target.value)}
-                      required
-                      disabled={isVerifying}
-                      autoFocus
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Button type="submit" className="w-full" disabled={isVerifying}>
-                    {isVerifying ? 'Verifying...' : 'Continue to Sign Up'}
-                  </Button>
-                </CardFooter>
-              </form>
-            </Card>
-          </TabsContent>
 
           {/* Existing User - Login */}
           <TabsContent value="existing">
@@ -133,6 +102,7 @@ export function PasswordGate() {
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
                       disabled={isLoggingIn}
+                      autoFocus
                     />
                   </div>
                   <div className="space-y-2">
@@ -152,6 +122,36 @@ export function PasswordGate() {
                 <CardFooter className="pt-2">
                   <Button type="submit" className="w-full" disabled={isLoggingIn}>
                     {isLoggingIn ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
+
+          {/* New User - Password Gate */}
+          <TabsContent value="new">
+            <Card>
+              <CardHeader>
+                <CardTitle>Enter Access Code</CardTitle>
+              </CardHeader>
+              <form onSubmit={handleGateSubmit}>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="gate-password">Access Code</Label>
+                    <Input
+                      id="gate-password"
+                      type="password"
+                      placeholder="Enter access code"
+                      value={gatePassword}
+                      onChange={(e) => setGatePassword(e.target.value)}
+                      required
+                      disabled={isVerifying}
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-2">
+                  <Button type="submit" className="w-full" disabled={isVerifying}>
+                    {isVerifying ? 'Verifying...' : 'Continue to Sign Up'}
                   </Button>
                 </CardFooter>
               </form>

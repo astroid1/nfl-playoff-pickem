@@ -357,25 +357,41 @@ async function updateGameFromData(supabase: any, dbGame: any, gameData: GameData
         }
     }
 
+    // Safeguard: Don't update status to in_progress/final for games that haven't started yet
+    // This prevents the API from incorrectly marking future games as started
+    const scheduledStart = new Date(dbGame.scheduled_start_time)
+    const now = new Date()
+    const gameHasStarted = now >= scheduledStart
+
+    let safeStatus = gameData.status
+    if (!gameHasStarted && (gameData.status === 'in_progress' || gameData.status === 'final')) {
+        console.log(`⚠️ API returned ${gameData.status} for future game ${gameData.awayAbbr}@${gameData.homeAbbr} (starts ${scheduledStart.toISOString()}), keeping as scheduled`)
+        safeStatus = 'scheduled'
+    }
+
     // Update game in database
     const updateData: any = {
-        status: gameData.status,
-        home_team_score: gameData.homeScore,
-        away_team_score: gameData.awayScore,
-        winning_team_id: winningTeamId,
-        quarter: gameData.quarter,
-        game_clock: gameData.gameClock,
-        api_game_id: gameData.apiGameId,
+        status: safeStatus,
+        home_team_score: gameHasStarted ? gameData.homeScore : null,
+        away_team_score: gameHasStarted ? gameData.awayScore : null,
+        winning_team_id: gameHasStarted ? winningTeamId : null,
+        quarter: gameHasStarted ? gameData.quarter : null,
+        game_clock: gameHasStarted ? gameData.gameClock : null,
         last_updated_at: new Date().toISOString(),
     }
 
-    // Set actual_start_time if game just started
-    if (dbGame.status === 'scheduled' && gameData.status === 'in_progress') {
+    // Only update api_game_id if not manually set (preserve MANUAL- prefixed IDs)
+    if (!dbGame.api_game_id?.startsWith('MANUAL-') && gameData.apiGameId) {
+        updateData.api_game_id = gameData.apiGameId
+    }
+
+    // Set actual_start_time if game just started (and has actually started based on time)
+    if (dbGame.status === 'scheduled' && safeStatus === 'in_progress' && gameHasStarted) {
         updateData.actual_start_time = new Date().toISOString()
     }
 
-    // Lock game if it's in progress or final
-    if (gameData.status === 'in_progress' || gameData.status === 'final') {
+    // Lock game if it's in progress or final AND the scheduled start time has passed
+    if ((safeStatus === 'in_progress' || safeStatus === 'final') && gameHasStarted) {
         updateData.is_locked = true
         if (!dbGame.locked_at) {
             updateData.locked_at = new Date().toISOString()

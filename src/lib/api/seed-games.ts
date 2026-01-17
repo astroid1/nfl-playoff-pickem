@@ -140,6 +140,24 @@ async function seedGames() {
                 const scheduledStartTime = new Date(game.game.date.timestamp * 1000).toISOString()
                 const status = mapGameStatus(game.game.status.short)
 
+                // Check if this matchup already exists as a manually added game (MANUAL- prefix)
+                // Skip to avoid duplicating manually seeded games
+                const { data: existingManualGame } = await supabase
+                    .from('games')
+                    .select('id, api_game_id')
+                    .eq('season', CURRENT_SEASON)
+                    .eq('playoff_round_id', playoffRoundId)
+                    .eq('home_team_id', homeTeamId)
+                    .eq('away_team_id', awayTeamId)
+                    .like('api_game_id', 'MANUAL-%')
+                    .single()
+
+                if (existingManualGame) {
+                    console.log(`⏭️  Skipping ${game.game.id}: Manual entry exists for this matchup (${existingManualGame.api_game_id})`)
+                    skippedTbd++ // Reuse this counter for skipped games
+                    continue
+                }
+
                 // Determine winning team if game is final
                 // API returns scores.home.total and scores.away.total
                 const homeScore = game.scores.home.total ?? null
