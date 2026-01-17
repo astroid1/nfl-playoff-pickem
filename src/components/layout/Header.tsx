@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,12 +18,14 @@ import { useState } from 'react'
 export function Header() {
   const { user, signOut } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
     toast.success('Signed out successfully')
     setOpen(false)
+    router.push('/gate')
   }
 
   const navItems = [
