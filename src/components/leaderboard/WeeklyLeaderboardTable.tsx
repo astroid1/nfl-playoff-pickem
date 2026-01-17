@@ -20,7 +20,7 @@ interface WeeklyLeaderboardTableProps {
 
 export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = false }: WeeklyLeaderboardTableProps) {
   const { user } = useAuth()
-  const { data: standings, isLoading } = useWeeklyLeaderboard(season, weekNumber, showAllPlayers)
+  const { data, isLoading } = useWeeklyLeaderboard(season, weekNumber, showAllPlayers)
 
   if (isLoading) {
     return (
@@ -30,7 +30,10 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
     )
   }
 
-  if (!standings || standings.length === 0) {
+  const standings = data?.standings || []
+  const totalGames = data?.totalGames || 0
+
+  if (standings.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No picks made for week {weekNumber} yet.</p>
@@ -51,6 +54,7 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
           <TableRow>
             <TableHead className="w-12 md:w-16">Rank</TableHead>
             <TableHead>Player</TableHead>
+            <TableHead className="text-center">Picks</TableHead>
             <TableHead className="text-right">Pts</TableHead>
             <TableHead className="text-right hidden sm:table-cell">Correct</TableHead>
             <TableHead className="text-right hidden sm:table-cell">Incorrect</TableHead>
@@ -67,6 +71,8 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
               : 0
             const isCurrentUser = user?.id === stat.user_id
             const medal = getMedalEmoji(rank)
+            const picksMade = stat.picks_made || 0
+            const picksComplete = picksMade === totalGames && totalGames > 0
 
             return (
               <TableRow
@@ -88,6 +94,11 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
                       </Badge>
                     )}
                   </div>
+                </TableCell>
+                <TableCell className="text-center py-2 md:py-4">
+                  <span className={picksComplete ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}>
+                    {picksMade}/{totalGames}
+                  </span>
                 </TableCell>
                 <TableCell className="text-right py-2 md:py-4">
                   <span className="font-bold text-lg">{stat.total_points}</span>

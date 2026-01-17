@@ -9,6 +9,15 @@ export function useWeeklyLeaderboard(season: number, weekNumber: number, showAll
   return useQuery({
     queryKey: ['weekly-leaderboard', season, weekNumber, showAllPlayers],
     queryFn: async () => {
+      // Get total games count for this week
+      const { count: totalGames, error: gamesError } = await supabase
+        .from('games')
+        .select('*', { count: 'exact', head: true })
+        .eq('season', season)
+        .eq('week_number', weekNumber)
+
+      if (gamesError) throw gamesError
+
       // Get all picks for the specified week
       const { data: picks, error: picksError } = await supabase
         .from('picks')
@@ -36,9 +45,13 @@ export function useWeeklyLeaderboard(season: number, weekNumber: number, showAll
             total_correct: 0,
             total_incorrect: 0,
             total_pending: 0,
+            picks_made: 0,
             has_picks: true,
           }
         }
+
+        // Count every pick
+        acc[userId].picks_made++
 
         if (pick.is_correct === true) {
           acc[userId].total_correct++
@@ -73,6 +86,7 @@ export function useWeeklyLeaderboard(season: number, weekNumber: number, showAll
               total_correct: 0,
               total_incorrect: 0,
               total_pending: 0,
+              picks_made: 0,
               has_picks: false,
             }
           }
@@ -112,7 +126,10 @@ export function useWeeklyLeaderboard(season: number, weekNumber: number, showAll
         }
       })
 
-      return rankedStandings
+      return {
+        standings: rankedStandings,
+        totalGames: totalGames || 0,
+      }
     },
     refetchInterval: 60000, // Refetch every minute
   })
