@@ -138,7 +138,10 @@ function GamePicksCard({ game }: { game: any }) {
                 {awayTeamPicks.length > 0 ? (
                   awayTeamPicks.map((pick: any) => (
                     <div key={pick.id} className="flex items-center justify-between text-sm py-1">
-                      <span className="truncate">{pick.profile?.display_name || pick.profile?.username || 'Unknown'}</span>
+                      <span className="truncate">
+                        {pick.profile?.display_name || pick.profile?.username || 'Unknown'}
+                        {pick.is_auto_pick && <span className="text-muted-foreground ml-1">(auto)</span>}
+                      </span>
                       {game.status === 'final' && pick.is_correct !== null && (
                         <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
                           {pick.is_correct ? '✓' : '✗'}
@@ -175,7 +178,10 @@ function GamePicksCard({ game }: { game: any }) {
                 {homeTeamPicks.length > 0 ? (
                   homeTeamPicks.map((pick: any) => (
                     <div key={pick.id} className="flex items-center justify-between text-sm py-1">
-                      <span className="truncate">{pick.profile?.display_name || pick.profile?.username || 'Unknown'}</span>
+                      <span className="truncate">
+                        {pick.profile?.display_name || pick.profile?.username || 'Unknown'}
+                        {pick.is_auto_pick && <span className="text-muted-foreground ml-1">(auto)</span>}
+                      </span>
                       {game.status === 'final' && pick.is_correct !== null && (
                         <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
                           {pick.is_correct ? '✓' : '✗'}
