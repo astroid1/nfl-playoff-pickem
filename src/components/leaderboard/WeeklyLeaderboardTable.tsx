@@ -41,11 +41,15 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
     )
   }
 
-  const getMedalEmoji = (rank: number) => {
+  const getMedalEmoji = (rank: number, hasPoints: boolean) => {
+    if (!hasPoints) return null // No medals until points are scored
     if (rank === 1) return '🥇'
     if (rank === 2) return '🥈'
     return null
   }
+
+  // Check if any points have been scored in this round
+  const roundHasPoints = standings.some((s: any) => s.total_points > 0)
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -70,7 +74,7 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
               ? Math.round((stat.total_correct / totalCompleted) * 100)
               : 0
             const isCurrentUser = user?.id === stat.user_id
-            const medal = getMedalEmoji(rank)
+            const medal = getMedalEmoji(rank, roundHasPoints)
             const picksMade = stat.picks_made || 0
             const picksComplete = picksMade === totalGames && totalGames > 0
 
@@ -81,8 +85,14 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
               >
                 <TableCell className="py-2 md:py-4">
                   <div className="flex items-center gap-1">
-                    {medal && <span className="text-lg">{medal}</span>}
-                    {!medal && <span className="font-medium">#{rank}</span>}
+                    {roundHasPoints ? (
+                      <>
+                        {medal && <span className="text-lg">{medal}</span>}
+                        {!medal && <span className="font-medium">#{rank}</span>}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="py-2 md:py-4">

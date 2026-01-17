@@ -1,18 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { EnhancedLeaderboardTable } from '@/components/leaderboard/EnhancedLeaderboardTable'
 import { WeeklyLeaderboardTable } from '@/components/leaderboard/WeeklyLeaderboardTable'
 import { PlayersTable } from '@/components/leaderboard/PlayersTable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useCurrentWeek } from '@/lib/hooks/useGames'
 
 export default function LeaderboardPage() {
   const currentSeason = parseInt(
     process.env.NEXT_PUBLIC_CURRENT_NFL_SEASON || new Date().getFullYear().toString()
   )
-  const [selectedWeek, setSelectedWeek] = useState(1)
+  const { data: currentWeek } = useCurrentWeek()
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null)
+
+  // Set selected week to current week once loaded
+  useEffect(() => {
+    if (currentWeek && selectedWeek === null) {
+      setSelectedWeek(currentWeek)
+    }
+  }, [currentWeek, selectedWeek])
 
   const roundNames: Record<number, string> = {
     1: 'Wild Card',
@@ -116,10 +125,10 @@ export default function LeaderboardPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>{roundNames[selectedWeek]} Round Standings</CardTitle>
+                  <CardTitle>{selectedWeek ? roundNames[selectedWeek] : ''} Round Standings</CardTitle>
                 </div>
                 <Select
-                  value={selectedWeek.toString()}
+                  value={selectedWeek?.toString() || ''}
                   onValueChange={(value) => setSelectedWeek(parseInt(value))}
                 >
                   <SelectTrigger className="w-[200px]">
@@ -135,7 +144,13 @@ export default function LeaderboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <WeeklyLeaderboardTable season={currentSeason} weekNumber={selectedWeek} showAllPlayers />
+              {selectedWeek ? (
+                <WeeklyLeaderboardTable season={currentSeason} weekNumber={selectedWeek} showAllPlayers />
+              ) : (
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
