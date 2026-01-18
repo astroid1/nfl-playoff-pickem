@@ -58,9 +58,9 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
           <TableRow>
             <TableHead className="w-12 md:w-16">Rank</TableHead>
             <TableHead>Player</TableHead>
-            <TableHead className="text-center">Picks</TableHead>
+            <TableHead className="text-right">Correct</TableHead>
             <TableHead className="text-right">Pts</TableHead>
-            <TableHead className="text-right hidden sm:table-cell">Correct</TableHead>
+            <TableHead className="text-center hidden sm:table-cell">Picks</TableHead>
             <TableHead className="text-right hidden sm:table-cell">Incorrect</TableHead>
             <TableHead className="text-right hidden md:table-cell">Pending</TableHead>
             <TableHead className="text-right hidden md:table-cell">Win %</TableHead>
@@ -105,16 +105,16 @@ export function WeeklyLeaderboardTable({ season, weekNumber, showAllPlayers = fa
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-center py-2 md:py-4">
-                  <span className={picksComplete ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}>
-                    {picksMade}/{totalGames}
-                  </span>
+                <TableCell className="text-right text-green-600 dark:text-green-400 py-2 md:py-4">
+                  {stat.total_correct}
                 </TableCell>
                 <TableCell className="text-right py-2 md:py-4">
                   <span className="font-bold text-lg">{stat.total_points}</span>
                 </TableCell>
-                <TableCell className="text-right text-green-600 dark:text-green-400 hidden sm:table-cell">
-                  {stat.total_correct}
+                <TableCell className="text-center hidden sm:table-cell py-2 md:py-4">
+                  <span className={picksComplete ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}>
+                    {picksMade}/{totalGames}
+                  </span>
                 </TableCell>
                 <TableCell className="text-right text-red-600 dark:text-red-400 hidden sm:table-cell">
                   {stat.total_incorrect}
