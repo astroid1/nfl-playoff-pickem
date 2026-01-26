@@ -59,7 +59,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState(currentPick?.selected_team_id)
   const [totalPointsGuess, setTotalPointsGuess] = useState<string>(
-    currentPick?.superbowl_total_points_guess?.toString() || ''
+    currentPick?.superbowl_total_points_guess?.toString() || '46'
   )
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
 
@@ -68,7 +68,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
   // Update selected team when currentPick changes (e.g., when navigating back to page)
   useEffect(() => {
     setSelectedTeam(currentPick?.selected_team_id)
-    setTotalPointsGuess(currentPick?.superbowl_total_points_guess?.toString() || '')
+    setTotalPointsGuess(currentPick?.superbowl_total_points_guess?.toString() || '46')
   }, [currentPick?.selected_team_id, currentPick?.superbowl_total_points_guess])
 
   // Set current time on client side to avoid hydration mismatch
@@ -341,7 +341,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                placeholder="Enter total points guess"
+                placeholder="46"
                 value={totalPointsGuess}
                 onChange={handleTotalPointsChange}
                 onBlur={handleTotalPointsBlur}
