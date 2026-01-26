@@ -96,7 +96,13 @@ export default function WeeklyPicksPage({ params }: PageProps) {
   // Calculate picks status
   const totalGames = games?.length || 0
   const picksMade = picks?.length || 0
-  const allPicksMade = picksMade === totalGames && totalGames > 0
+
+  // For Super Bowl (week 4), also require tiebreaker to be set
+  const isSuperBowlWeek = weekNumber === 4
+  const superBowlPick = isSuperBowlWeek ? (picks as any[])?.find((p: any) => p.superbowl_total_points_guess != null) : null
+  const tiebreakerComplete = !isSuperBowlWeek || (superBowlPick != null)
+
+  const allPicksMade = picksMade === totalGames && totalGames > 0 && tiebreakerComplete
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -117,7 +123,12 @@ export default function WeeklyPicksPage({ params }: PageProps) {
         }`}>
           {allPicksMade && <CheckCircle2 className="h-5 w-5" />}
           <span className="font-medium">
-            {allPicksMade ? 'All picks saved!' : `${picksMade}/${totalGames} picks made`}
+            {allPicksMade
+              ? 'All picks saved!'
+              : isSuperBowlWeek && picksMade === totalGames && !tiebreakerComplete
+                ? 'Enter tiebreaker to complete'
+                : `${picksMade}/${totalGames} picks made`
+            }
           </span>
         </div>
       </div>

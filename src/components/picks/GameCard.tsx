@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -59,7 +60,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState(currentPick?.selected_team_id)
   const [totalPointsGuess, setTotalPointsGuess] = useState<string>(
-    currentPick?.superbowl_total_points_guess?.toString() || '46'
+    currentPick?.superbowl_total_points_guess?.toString() || ''
   )
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
 
@@ -68,7 +69,7 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
   // Update selected team when currentPick changes (e.g., when navigating back to page)
   useEffect(() => {
     setSelectedTeam(currentPick?.selected_team_id)
-    setTotalPointsGuess(currentPick?.superbowl_total_points_guess?.toString() || '46')
+    setTotalPointsGuess(currentPick?.superbowl_total_points_guess?.toString() || '')
   }, [currentPick?.selected_team_id, currentPick?.superbowl_total_points_guess])
 
   // Set current time on client side to avoid hydration mismatch
@@ -123,25 +124,29 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
     }
   }
 
-  const handleTotalPointsBlur = async () => {
+  const handleSaveTiebreaker = async () => {
     if (isLocked || disabled || !selectedTeam) return
 
-    const newGuess = totalPointsGuess ? parseInt(totalPointsGuess, 10) : null
-    const currentGuess = currentPick?.superbowl_total_points_guess ?? null
+    if (!totalPointsGuess || totalPointsGuess.trim() === '') {
+      toast.error('Please enter a total points guess')
+      return
+    }
 
-    // Only save if the value changed
-    if (newGuess !== currentGuess) {
-      setIsSubmitting(true)
-      try {
-        await onPickChange(game.id, selectedTeam, newGuess)
-        toast.success('Tiebreaker saved!')
-      } catch (error: any) {
-        toast.error(error.message || 'Failed to save tiebreaker')
-      } finally {
-        setIsSubmitting(false)
-      }
+    const newGuess = parseInt(totalPointsGuess, 10)
+
+    setIsSubmitting(true)
+    try {
+      await onPickChange(game.id, selectedTeam, newGuess)
+      toast.success('Tiebreaker saved!')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save tiebreaker')
+    } finally {
+      setIsSubmitting(false)
     }
   }
+
+  // Check if tiebreaker has been saved
+  const tiebreakerSaved = currentPick?.superbowl_total_points_guess != null
 
   const formatGameTime = (isoTime: string) => {
     try {
@@ -336,21 +341,36 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <Input
-                id="total-points"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder="46"
-                value={totalPointsGuess}
-                onChange={handleTotalPointsChange}
-                onBlur={handleTotalPointsBlur}
-                disabled={isLocked || disabled || isSubmitting}
-                className="w-full"
-              />
-              {isLocked && totalPointsGuess && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your guess: {totalPointsGuess} points
+              <div className="flex gap-2">
+                <Input
+                  id="total-points"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Enter total points"
+                  value={totalPointsGuess}
+                  onChange={handleTotalPointsChange}
+                  disabled={isLocked || disabled || isSubmitting}
+                  className="flex-1"
+                />
+                {!isLocked && (
+                  <Button
+                    onClick={handleSaveTiebreaker}
+                    disabled={isLocked || disabled || isSubmitting || !selectedTeam || !totalPointsGuess}
+                    size="default"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save'}
+                  </Button>
+                )}
+              </div>
+              {tiebreakerSaved && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  ✓ Saved: {currentPick?.superbowl_total_points_guess} points
+                </p>
+              )}
+              {!tiebreakerSaved && !isLocked && selectedTeam && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  Enter your tiebreaker guess and click Save
                 </p>
               )}
             </div>
