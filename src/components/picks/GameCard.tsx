@@ -7,11 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { formatInTimeZone } from 'date-fns-tz'
 import { toast } from 'sonner'
 import { HelpCircle } from 'lucide-react'
@@ -319,28 +318,29 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
 
         {/* Super Bowl Tiebreaker Input */}
         {isSuperBowl && (
-          <TooltipProvider>
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="total-points" className="text-sm font-medium">
-                  Total Points Tiebreaker
-                </Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center gap-2 mb-2">
+              <Label htmlFor="total-points" className="text-sm font-medium">
+                Total Points Tiebreaker
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button type="button" className="inline-flex">
                     <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p>
-                      Guess the total combined points scored by both teams in the Super Bowl.
-                      This is used as a tiebreaker if players have the same number of correct picks.
-                      The winner is determined by the absolute difference between your guess and the actual total score (lower is better).
-                    </p>
-                    <p className="mt-2 text-muted-foreground text-xs">
-                      Example: If you guess 45 and the final score is 28-32 (total 60), your difference is 15.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="max-w-xs text-sm">
+                  <p>
+                    Guess the total combined points scored by both teams in the Super Bowl.
+                    This is used as a tiebreaker if players have the same number of correct picks.
+                    The winner is determined by the absolute difference between your guess and the actual total score (lower is better).
+                  </p>
+                  <p className="mt-2 text-muted-foreground text-xs">
+                    Example: If you guess 45 and the final score is 28-32 (total 60), your difference is 15.
+                  </p>
+                </PopoverContent>
+              </Popover>
+            </div>
               <div className="flex gap-2">
                 <Input
                   id="total-points"
@@ -374,7 +374,6 @@ export function GameCard({ game, currentPick, onPickChange, disabled = false }: 
                 </p>
               )}
             </div>
-          </TooltipProvider>
         )}
 
         {/* Pick Result Banner */}
