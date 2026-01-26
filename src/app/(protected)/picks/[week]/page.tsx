@@ -6,6 +6,8 @@ import { useGames } from '@/lib/hooks/useGames'
 import { usePicks, useSubmitPick } from '@/lib/hooks/usePicks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 
 interface PageProps {
@@ -91,14 +93,33 @@ export default function WeeklyPicksPage({ params }: PageProps) {
 
   const currentRoundName = roundNames[weekNumber] || `Week ${weekNumber}`
 
+  // Calculate picks status
+  const totalGames = games?.length || 0
+  const picksMade = picks?.length || 0
+  const allPicksMade = picksMade === totalGames && totalGames > 0
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">{currentRoundName} Picks</h1>
-        <p className="text-muted-foreground">
-          Select your picks before the games start
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">{currentRoundName} Picks</h1>
+          <p className="text-muted-foreground">
+            Select your picks before the games start
+          </p>
+        </div>
+
+        {/* Picks Status */}
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+          allPicksMade
+            ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+            : 'bg-muted text-muted-foreground'
+        }`}>
+          {allPicksMade && <CheckCircle2 className="h-5 w-5" />}
+          <span className="font-medium">
+            {allPicksMade ? 'All picks saved!' : `${picksMade}/${totalGames} picks made`}
+          </span>
+        </div>
       </div>
 
       {/* Games by Round */}
