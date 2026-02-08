@@ -68,18 +68,36 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
               <TableHead className="text-right hidden md:table-cell">Win %</TableHead>
               <TableHead className="text-right hidden sm:table-cell">
                 <div className="flex items-center justify-end gap-1">
-                  <span className="hidden lg:inline">2nd Tiebreaker</span>
-                  <span className="lg:hidden">TB</span>
+                  <span className="hidden lg:inline">SB Guess</span>
+                  <span className="lg:hidden">Guess</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p>
-                        <strong>2nd Tiebreaker (Super Bowl Points Guess):</strong>
+                        <strong>Super Bowl Total Points Guess:</strong>
                         <br />
-                        Used only if players are tied on Points AND Correct Picks.
-                        The winner is whoever is closest to the actual combined Super Bowl score.
+                        Each player's guess for the combined final score.
+                        Used as 2nd tiebreaker - closest to actual wins.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead className="text-right hidden md:table-cell">
+                <div className="flex items-center justify-end gap-1">
+                  <span>Diff</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>
+                        <strong>Tiebreaker Difference:</strong>
+                        <br />
+                        How far off from actual Super Bowl total.
+                        Lower is better. Shows after game ends.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -131,6 +149,13 @@ export function EnhancedLeaderboardTable({ season }: { season?: number }) {
                     {totalGames > 0 ? `${winRate}%` : '—'}
                   </TableCell>
                   <TableCell className="text-right hidden sm:table-cell">
+                    {stat.superbowl_total_points_guess !== null ? (
+                      <span className="font-medium">{stat.superbowl_total_points_guess}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right hidden md:table-cell">
                     {stat.tiebreaker_difference !== null ? (
                       <span className="font-medium">{stat.tiebreaker_difference}</span>
                     ) : (

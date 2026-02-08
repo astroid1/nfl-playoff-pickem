@@ -26,12 +26,26 @@ export function useEnhancedLeaderboard(season?: number) {
 
       if (statsError) throw statsError
 
+      // Get Super Bowl picks to show the tiebreaker guess
+      const { data: superBowlPicks, error: sbPicksError } = await supabase
+        .from('picks')
+        .select('user_id, superbowl_total_points_guess')
+        .eq('season', currentSeason)
+        .eq('week_number', 4)
+        .not('superbowl_total_points_guess', 'is', null)
+
+      if (sbPicksError) throw sbPicksError
+
       // Create a map of user stats
       const statsMap = new Map(stats.map(s => [s.user_id, s]))
+
+      // Create a map of Super Bowl guesses
+      const sbGuessMap = new Map(superBowlPicks?.map(p => [p.user_id, p.superbowl_total_points_guess]) || [])
 
       // Merge profiles with stats, showing all users
       const standings = profiles.map(profile => {
         const userStats = statsMap.get(profile.id)
+        const sbGuess = sbGuessMap.get(profile.id)
         return {
           user_id: profile.id,
           profile: {
@@ -48,6 +62,7 @@ export function useEnhancedLeaderboard(season?: number) {
           championship_correct: userStats?.championship_correct || 0,
           superbowl_correct: userStats?.superbowl_correct || 0,
           tiebreaker_difference: userStats?.tiebreaker_difference ?? null,
+          superbowl_total_points_guess: sbGuess ?? null,
           has_stats: !!userStats,
         }
       })
