@@ -26,7 +26,7 @@ function formatGameTime(quarter: number | null | undefined, gameClock: string | 
 }
 
 // Component to display picks for a single game
-function GamePicksCard({ game }: { game: any }) {
+function GamePicksCard({ game, isSuperBowl }: { game: any; isSuperBowl: boolean }) {
   const supabase = createClient()
 
   const { data: picks, isLoading } = useQuery({
@@ -142,11 +142,18 @@ function GamePicksCard({ game }: { game: any }) {
                         {pick.profile?.display_name || pick.profile?.username || 'Unknown'}
                         {pick.is_auto_pick && <span className="text-muted-foreground ml-1">(auto)</span>}
                       </span>
-                      {game.status === 'final' && pick.is_correct !== null && (
-                        <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
-                          {pick.is_correct ? '✓' : '✗'}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isSuperBowl && pick.superbowl_total_points_guess != null && (
+                          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            TB: {pick.superbowl_total_points_guess}
+                          </span>
+                        )}
+                        {game.status === 'final' && pick.is_correct !== null && (
+                          <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
+                            {pick.is_correct ? '✓' : '✗'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -182,11 +189,18 @@ function GamePicksCard({ game }: { game: any }) {
                         {pick.profile?.display_name || pick.profile?.username || 'Unknown'}
                         {pick.is_auto_pick && <span className="text-muted-foreground ml-1">(auto)</span>}
                       </span>
-                      {game.status === 'final' && pick.is_correct !== null && (
-                        <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
-                          {pick.is_correct ? '✓' : '✗'}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isSuperBowl && pick.superbowl_total_points_guess != null && (
+                          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            TB: {pick.superbowl_total_points_guess}
+                          </span>
+                        )}
+                        {game.status === 'final' && pick.is_correct !== null && (
+                          <span className={pick.is_correct ? 'text-green-600' : 'text-red-600'}>
+                            {pick.is_correct ? '✓' : '✗'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -265,10 +279,13 @@ export function PoolPicksGrid({ weekNumber, season }: PoolPicksGridProps) {
     )
   }
 
+  // Check if this is Super Bowl week (week 4)
+  const isSuperBowl = weekNumber === 4
+
   return (
     <div className="space-y-6">
       {startedGames.map(game => (
-        <GamePicksCard key={game.id} game={game} />
+        <GamePicksCard key={game.id} game={game} isSuperBowl={isSuperBowl} />
       ))}
     </div>
   )
