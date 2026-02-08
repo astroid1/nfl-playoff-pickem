@@ -79,6 +79,11 @@ export async function GET(request: NextRequest) {
                     const autoPicksToInsert = usersWithoutPicks.map(userId => {
                         // Randomly select home or away team (50/50)
                         const selectedTeamId = Math.random() < 0.5 ? game.home_team_id : game.away_team_id
+
+                        // For Super Bowl (week 4), add random tiebreaker between 40-60
+                        const isSuperBowl = game.week_number === 4
+                        const tiebreaker = isSuperBowl ? Math.floor(Math.random() * 21) + 40 : null
+
                         return {
                             user_id: userId,
                             game_id: game.id,
@@ -86,6 +91,7 @@ export async function GET(request: NextRequest) {
                             season: game.season,
                             week_number: game.week_number,
                             is_auto_pick: true,
+                            ...(isSuperBowl && { superbowl_total_points_guess: tiebreaker }),
                         }
                     })
 
