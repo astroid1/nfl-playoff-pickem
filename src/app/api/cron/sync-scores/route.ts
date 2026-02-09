@@ -44,9 +44,51 @@ const TEAM_ABBR_MAP: Record<string, string> = {
     'WSH': 'WAS',
 }
 
+// Map API-Sports team names to database abbreviations
+// API-Sports doesn't return team codes, only full names
+const TEAM_NAME_MAP: Record<string, string> = {
+    'Seattle Seahawks': 'SEA',
+    'New England Patriots': 'NE',
+    'Philadelphia Eagles': 'PHI',
+    'Kansas City Chiefs': 'KC',
+    'San Francisco 49ers': 'SF',
+    'Buffalo Bills': 'BUF',
+    'Baltimore Ravens': 'BAL',
+    'Detroit Lions': 'DET',
+    'Houston Texans': 'HOU',
+    'Green Bay Packers': 'GB',
+    'Tampa Bay Buccaneers': 'TB',
+    'Los Angeles Rams': 'LAR',
+    'Washington Commanders': 'WAS',
+    'Minnesota Vikings': 'MIN',
+    'Pittsburgh Steelers': 'PIT',
+    'Denver Broncos': 'DEN',
+    'Los Angeles Chargers': 'LAC',
+    'Dallas Cowboys': 'DAL',
+    'New York Giants': 'NYG',
+    'New York Jets': 'NYJ',
+    'Miami Dolphins': 'MIA',
+    'Cleveland Browns': 'CLE',
+    'Cincinnati Bengals': 'CIN',
+    'Indianapolis Colts': 'IND',
+    'Tennessee Titans': 'TEN',
+    'Jacksonville Jaguars': 'JAC',
+    'Atlanta Falcons': 'ATL',
+    'Carolina Panthers': 'CAR',
+    'New Orleans Saints': 'NO',
+    'Arizona Cardinals': 'ARI',
+    'Chicago Bears': 'CHI',
+    'Las Vegas Raiders': 'LV',
+}
+
 function normalizeTeamAbbr(apiAbbr: string | undefined): string {
     if (!apiAbbr) return ''
     return TEAM_ABBR_MAP[apiAbbr] || apiAbbr
+}
+
+function teamNameToAbbr(teamName: string | undefined): string {
+    if (!teamName) return ''
+    return TEAM_NAME_MAP[teamName] || ''
 }
 
 export async function GET(request: NextRequest) {
@@ -331,15 +373,32 @@ function extractQuarterFromShort(shortStatus: string | undefined): number | null
 
 /**
  * Find a game in API-Sports response and extract normalized data
+ * API-Sports uses team names (not codes), and home/away may be swapped from our DB
  */
 function findApiSportsGame(games: NFLGame[], homeAbbr: string, awayAbbr: string): GameData | null {
-    // API-Sports games have teams.home.code and teams.away.code (same interface)
-    // Normalize API abbreviations to match database
-    const apiGame = games.find(g => {
-        const apiHomeAbbr = normalizeTeamAbbr(g.teams?.home?.code)
-        const apiAwayAbbr = normalizeTeamAbbr(g.teams?.away?.code)
-        return apiHomeAbbr === homeAbbr && apiAwayAbbr === awayAbbr
-    })
+    // API-Sports returns team names, not codes - map them to abbreviations
+    // Also need to handle case where API home/away is swapped from DB
+    let apiGame: NFLGame | undefined
+    let teamsSwapped = false
+
+    for (const g of games) {
+        const rawGame = g as any
+        const apiHomeAbbr = teamNameToAbbr(rawGame.teams?.home?.name) || normalizeTeamAbbr(rawGame.teams?.home?.code)
+        const apiAwayAbbr = teamNameToAbbr(rawGame.teams?.away?.name) || normalizeTeamAbbr(rawGame.teams?.away?.code)
+
+        // Check if teams match directly
+        if (apiHomeAbbr === homeAbbr && apiAwayAbbr === awayAbbr) {
+            apiGame = g
+            teamsSwapped = false
+            break
+        }
+        // Check if teams are swapped (API has them reversed from our DB)
+        if (apiHomeAbbr === awayAbbr && apiAwayAbbr === homeAbbr) {
+            apiGame = g
+            teamsSwapped = true
+            break
+        }
+    }
 
     if (!apiGame) return null
 
@@ -349,11 +408,16 @@ function findApiSportsGame(games: NFLGame[], homeAbbr: string, awayAbbr: string)
     // API-Sports doesn't have a quarter property - extract from short field
     const quarter = extractQuarterFromShort(statusShort)
 
+    // If teams are swapped, we need to swap the scores too
+    const apiHomeScore = apiGame.scores?.home?.total ?? null
+    const apiAwayScore = apiGame.scores?.away?.total ?? null
+
     return {
         homeAbbr,
         awayAbbr,
-        homeScore: apiGame.scores?.home?.total ?? null,
-        awayScore: apiGame.scores?.away?.total ?? null,
+        // Map API scores to DB home/away correctly
+        homeScore: teamsSwapped ? apiAwayScore : apiHomeScore,
+        awayScore: teamsSwapped ? apiHomeScore : apiAwayScore,
         status: newStatus,
         quarter,
         gameClock: apiGame.game?.status?.timer ?? null,
