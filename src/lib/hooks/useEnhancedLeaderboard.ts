@@ -36,6 +36,21 @@ export function useEnhancedLeaderboard(season?: number) {
 
       if (sbPicksError) throw sbPicksError
 
+      // Get Super Bowl game to calculate tiebreaker difference
+      const { data: superBowlGame } = await supabase
+        .from('games')
+        .select('home_team_score, away_team_score, status')
+        .eq('season', currentSeason)
+        .eq('week_number', 4)
+        .single()
+
+      // Calculate actual total points (only if game has scores)
+      const actualTotalPoints = superBowlGame &&
+        superBowlGame.home_team_score !== null &&
+        superBowlGame.away_team_score !== null
+          ? superBowlGame.home_team_score + superBowlGame.away_team_score
+          : null
+
       // Create a map of user stats
       const statsMap = new Map(stats.map(s => [s.user_id, s]))
 
@@ -46,6 +61,13 @@ export function useEnhancedLeaderboard(season?: number) {
       const standings = profiles.map(profile => {
         const userStats = statsMap.get(profile.id)
         const sbGuess = sbGuessMap.get(profile.id)
+
+        // Calculate tiebreaker difference dynamically
+        let tiebreakerDiff: number | null = null
+        if (actualTotalPoints !== null && sbGuess !== null && sbGuess !== undefined) {
+          tiebreakerDiff = Math.abs(actualTotalPoints - sbGuess)
+        }
+
         return {
           user_id: profile.id,
           profile: {
@@ -61,7 +83,7 @@ export function useEnhancedLeaderboard(season?: number) {
           divisional_correct: userStats?.divisional_correct || 0,
           championship_correct: userStats?.championship_correct || 0,
           superbowl_correct: userStats?.superbowl_correct || 0,
-          tiebreaker_difference: userStats?.tiebreaker_difference ?? null,
+          tiebreaker_difference: tiebreakerDiff,
           superbowl_total_points_guess: sbGuess ?? null,
           has_stats: !!userStats,
         }
