@@ -314,6 +314,22 @@ function findRapidApiGame(games: NFLGame[], homeAbbr: string, awayAbbr: string):
 }
 
 /**
+ * Extract quarter number from API-Sports status.short field
+ * API-Sports uses "Q1", "Q2", "Q3", "Q4", "OT", "HT" etc.
+ */
+function extractQuarterFromShort(shortStatus: string | undefined): number | null {
+    if (!shortStatus) return null
+    const upper = shortStatus.toUpperCase()
+    if (upper === 'Q1') return 1
+    if (upper === 'Q2') return 2
+    if (upper === 'Q3') return 3
+    if (upper === 'Q4') return 4
+    if (upper === 'OT') return 5
+    if (upper === 'HT') return 2 // Halftime is after Q2
+    return null
+}
+
+/**
  * Find a game in API-Sports response and extract normalized data
  */
 function findApiSportsGame(games: NFLGame[], homeAbbr: string, awayAbbr: string): GameData | null {
@@ -330,13 +346,16 @@ function findApiSportsGame(games: NFLGame[], homeAbbr: string, awayAbbr: string)
     const statusShort = apiGame.game?.status?.short
     const newStatus = mapGameStatus(statusShort)
 
+    // API-Sports doesn't have a quarter property - extract from short field
+    const quarter = extractQuarterFromShort(statusShort)
+
     return {
         homeAbbr,
         awayAbbr,
         homeScore: apiGame.scores?.home?.total ?? null,
         awayScore: apiGame.scores?.away?.total ?? null,
         status: newStatus,
-        quarter: apiGame.game?.status?.quarter ?? null,
+        quarter,
         gameClock: apiGame.game?.status?.timer ?? null,
         apiGameId: String(apiGame.game?.id || ''),
         source: 'api-sports',
